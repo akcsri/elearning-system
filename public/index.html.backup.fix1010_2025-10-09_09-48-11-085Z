@@ -1007,7 +1007,7 @@
                 } catch (error) {
                     return false;
                 }
-<<<<< HEAD
+<<<<<<< HEAD
             },
 
             async loadAllProgress() {
@@ -1015,7 +1015,7 @@
                     const progressData = {};
 =======
             };
->>>>> 82cf5fc497cde1e13ce261ac4781d7eef901c08f
+>>>>>>> 82cf5fc497cde1e13ce261ac4781d7eef901c08f
                     const progressPromises = AppData.users.map(async (user) => {
                         try {
                             const progress = await this.loadProgress(user.id);
@@ -1035,7 +1035,7 @@
                     return true;
                 } catch (error) {
                     console.error('❌ 進捗一括ロードエラー:', error);
-<<<<< HEAD
+<<<<<<< HEAD
 =======
                     return false;
                 }
@@ -1063,7 +1063,7 @@
                     return true;
                 } catch (error) {
                     console.error('❌ 進捗一括ロードエラー:', error);
->>>>> 82cf5fc497cde1e13ce261ac4781d7eef901c08f
+>>>>>>> 82cf5fc497cde1e13ce261ac4781d7eef901c08f
                     return false;
                 }
             }
@@ -1277,13 +1277,13 @@
 
             async init() {
                 await Database.load();
-<<<<< HEAD
+<<<<<<< HEAD
         await Database.loadAllProgress();
                 
                 setInterval(() => {
 =======
         await Database.loadAllProgress();setInterval(() => {
->>>>> 82cf5fc497cde1e13ce261ac4781d7eef901c08f
+>>>>>>> 82cf5fc497cde1e13ce261ac4781d7eef901c08f
                     if (AppData.courses.length > 0 || AppData.learningRecords.length > 0) {
                         Database.save();
                     }
