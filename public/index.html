@@ -2133,6 +2133,35 @@
                 }
             },
 
+            switchTab(tab) {
+                this.currentTab = tab;
+                this.render();
+            },
+
+            async logout() {
+                if (confirm('ログアウトしますか?')) {
+                    if (AppData.currentUser && 
+                        (AppData.learningState.screen === 'training' || 
+                        AppData.learningState.screen === 'quiz')) {
+                        await Database.saveProgress(AppData.currentUser.id);
+                    }
+                    
+                    AppData.currentUser = null;
+                    AppData.savedProgress = null;
+                    this.currentView = 'login';
+                    AppData.learningState = {
+                        screen: 'start',
+                        slideIndex: 0,
+                        questionIndex: 0,
+                        userName: '',
+                        userDept: '',
+                        answers: {},
+                        showExplanations: {}
+                    };
+                    this.render();
+                }
+            },
+
             async switchToLearning() {
                 if (AppData.courses.length > 0 && !AppData.currentCourse) {
                     AppData.currentCourse = AppData.courses[0];
