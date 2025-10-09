@@ -673,6 +673,9 @@
             color: #1e40af;
         }
     </style>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div id="app"></div>
@@ -854,10 +857,30 @@
         });
 
         // データベース管理 - 完全DB依存版
+        // ========================================
+        // Firebase Realtime Database 設定
+        // ========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyBmQbeTfiVDgxMIAC3ybhjSHvx-2KmiKjk",
+            authDomain: "elearning-system-1aa6d.firebaseapp.com",
+            databaseURL: "https://elearning-system-1aa6d-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "elearning-system-1aa6d",
+            storageBucket: "elearning-system-1aa6d.firebasestorage.app",
+            messagingSenderId: "606427429563",
+            appId: "1:606427429563:web:34cfd4fe43299209b9879e"
+        };
+
+        // Firebase初期化
+        firebase.initializeApp(firebaseConfig);
+        const firebaseDB = firebase.database();
+
+        // ========================================
+        // Database管理 - Firebase Realtime版
+        // ========================================
         const Database = {
-            API_BASE: window.location.origin,
+            realtimeListeners: {},
             
-            // 初期ユーザーデータ定義
+            // 初期ユーザーデータ
             getInitialUsers() {
                 return [
                     {
@@ -962,47 +985,78 @@
                 ];
             },
             
-            // DB初期化 - 初回起動時に初期データを自動投入
             async init() {
                 try {
-                    const response = await fetch(`${this.API_BASE}/api/data`);
+                    console.log('🔥 Firebase Realtime Database 初期化中...');
                     
-                    if (!response.ok || response.status === 404) {
-                        console.log('🔧 DBが空です。初期データを投入します...');
-                        const initialData = {
-                            users: this.getInitialUsers(),
-                            courses: [],
-                            learningRecords: [],
-                            lastUpdated: new Date().toISOString()
-                        };
+                    // データを読み込み
+                    const snapshot = await firebaseDB.ref('data').once('value');
+                    const data = snapshot.val();
+                    
+                    if (data) {
+                        AppData.users = data.users || this.getInitialUsers();
+                        AppData.courses = data.courses || [];
+                        AppData.learningRecords = data.learningRecords || [];
                         
-                        const saveResponse = await fetch(`${this.API_BASE}/api/data`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(initialData)
+                        console.log('✅ Firebaseからデータを読み込みました', {
+                            users: AppData.users.length,
+                            courses: AppData.courses.length,
+                            records: AppData.learningRecords.length
                         });
-                        
-                        if (saveResponse.ok) {
-                            console.log('✅ 初期データをDBに投入しました');
-                            AppData.users = this.getInitialUsers();
-                            AppData.courses = [];
-                            AppData.learningRecords = [];
-                            return true;
-                        }
                     } else {
-                        // DBからデータをロード
-                        return await this.load();
+                        // 初期データを設定
+                        console.log('🆕 初期データをFirebaseに保存します');
+                        AppData.users = this.getInitialUsers();
+                        AppData.courses = [];
+                        AppData.learningRecords = [];
+                        await this.save();
                     }
+                    
+                    // リアルタイム同期を開始
+                    this.startRealtimeSync();
                     
                     return true;
                 } catch (error) {
-                    console.error('❌ DB初期化エラー:', error);
-                    // エラー時はローカルで初期データを使用
+                    console.error('❌ Firebase初期化エラー:', error);
                     AppData.users = this.getInitialUsers();
                     AppData.courses = [];
                     AppData.learningRecords = [];
                     return false;
                 }
+            },
+            
+            // 🔥 リアルタイム同期
+            startRealtimeSync() {
+                console.log('🔄 リアルタイム同期を開始します');
+                
+                // データ変更を監視
+                firebaseDB.ref('data').on('value', function(snapshot) {
+                    const data = snapshot.val();
+                    if (data) {
+                        const oldCoursesLength = AppData.courses.length;
+                        const oldRecordsLength = AppData.learningRecords.length;
+                        
+                        AppData.users = data.users || Database.getInitialUsers();
+                        AppData.courses = data.courses || [];
+                        AppData.learningRecords = data.learningRecords || [];
+                        
+                        // 変更があれば通知
+                        if (oldCoursesLength !== AppData.courses.length || 
+                            oldRecordsLength !== AppData.learningRecords.length) {
+                            console.log('🔄 データが更新されました（他のブラウザから）', {
+                                courses: AppData.courses.length,
+                                records: AppData.learningRecords.length
+                            });
+                            
+                            // 画面を自動更新
+                            if (App && App.render) {
+                                App.render();
+                            }
+                        }
+                    }
+                });
+                
+                console.log('✅ リアルタイム同期が有効になりました');
             },
             
             async save() {
@@ -1013,64 +1067,55 @@
                         learningRecords: AppData.learningRecords,
                         lastUpdated: new Date().toISOString()
                     };
-                    const response = await fetch(`${this.API_BASE}/api/data`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(dataToSave)
+                    
+                    await firebaseDB.ref('data').set(dataToSave);
+                    
+                    console.log('💾 [' + new Date().toLocaleTimeString() + '] Firebaseに保存しました', {
+                        users: AppData.users.length,
+                        courses: AppData.courses.length,
+                        records: AppData.learningRecords.length
                     });
-                    const result = await response.json();
-                    if (result.success) {
-                        console.log('💾 [' + new Date().toLocaleTimeString() + '] データをDBに保存しました');
-                        return true;
-                    }
-                    return false;
+                    
+                    return true;
                 } catch (error) {
-                    console.error('❌ データ保存エラー:', error);
+                    console.error('❌ 保存エラー:', error);
                     return false;
                 }
             },
             
             async load() {
                 try {
-                    const response = await fetch(`${this.API_BASE}/api/data`);
-                    if (response.ok) {
-                        const data = await response.json();
+                    const snapshot = await firebaseDB.ref('data').once('value');
+                    const data = snapshot.val();
+                    
+                    if (data) {
+                        AppData.users = data.users || this.getInitialUsers();
+                        AppData.courses = data.courses || [];
+                        AppData.learningRecords = data.learningRecords || [];
                         
-                        // 🔧 修正: データを確実に設定
-                        AppData.users = data.users && Array.isArray(data.users) ? data.users : this.getInitialUsers();
-                        AppData.courses = data.courses && Array.isArray(data.courses) ? data.courses : [];
-                        AppData.learningRecords = data.learningRecords && Array.isArray(data.learningRecords) ? data.learningRecords : [];
-                        
-                        console.log('✅ DBからデータを読み込みました', {
+                        console.log('✅ Firebaseからデータをロードしました', {
                             users: AppData.users.length,
                             courses: AppData.courses.length,
-                            records: AppData.learningRecords.length,
-                            lastUpdated: data.lastUpdated || '不明'
+                            records: AppData.learningRecords.length
                         });
                         
-                        // 🔧 追加: コース情報を詳細ログ
+                        // コース詳細をログ
                         if (AppData.courses.length > 0) {
                             console.log('📚 利用可能なコース:');
                             AppData.courses.forEach(function(course, index) {
-                                console.log(`  ${index + 1}. ${course.title} (ID: ${course.id}, 画像: ${course.slideImages ? course.slideImages.length : 0}枚)`);
+                                console.log('  ' + (index + 1) + '. ' + course.title + 
+                                        ' (ID: ' + course.id + ', 画像: ' + 
+                                        (course.slideImages ? course.slideImages.length : 0) + '枚)');
                             });
-                        } else {
-                            console.warn('⚠️ 警告: コースが1つもありません');
                         }
                         
                         return true;
                     } else {
-                        console.log('⚠️ DBにデータがありません');
-                        AppData.users = this.getInitialUsers();
-                        AppData.courses = [];
-                        AppData.learningRecords = [];
+                        console.log('⚠️ Firebaseにデータがありません');
                         return false;
                     }
                 } catch (error) {
-                    console.error('❌ データ読み込みエラー:', error);
-                    AppData.users = this.getInitialUsers();
-                    AppData.courses = [];
-                    AppData.learningRecords = [];
+                    console.error('❌ ロードエラー:', error);
                     return false;
                 }
             },
@@ -1078,23 +1123,25 @@
             async saveProgress(userId) {
                 try {
                     const progress = {
-                        ...AppData.learningState,
                         userId: userId,
                         courseId: AppData.currentCourse ? AppData.currentCourse.id : null,
+                        screen: AppData.learningState.screen,
+                        slideIndex: AppData.learningState.slideIndex,
+                        questionIndex: AppData.learningState.questionIndex,
+                        userName: AppData.learningState.userName,
+                        userDept: AppData.learningState.userDept,
+                        answers: AppData.learningState.answers || {},
+                        showExplanations: AppData.learningState.showExplanations || {},
                         lastUpdated: new Date().toISOString()
                     };
-                    const response = await fetch(`${this.API_BASE}/api/progress/${userId}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(progress)
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        console.log('💾 進行状況を保存 (User: ' + userId + ')');
-                        AppData.progressData[userId] = progress;
-                        return true;
-                    }
-                    return false;
+                    
+                    await firebaseDB.ref('progress/' + userId).set(progress);
+                    AppData.progressData[userId] = progress;
+                    
+                    console.log('💾 進行状況を保存 (User: ' + userId + ', Course: ' + 
+                            (AppData.currentCourse ? AppData.currentCourse.id : 'なし') + ')');
+                    
+                    return true;
                 } catch (error) {
                     console.error('❌ 進行状況保存エラー:', error);
                     return false;
@@ -1103,56 +1150,85 @@
             
             async loadProgress(userId) {
                 try {
-                    const response = await fetch(`${this.API_BASE}/api/progress/${userId}`);
-                    if (response.ok) {
-                        const progress = await response.json();
-                        const hoursSince = (Date.now() - new Date(progress.lastUpdated)) / (1000 * 60 * 60);
+                    const snapshot = await firebaseDB.ref('progress/' + userId).once('value');
+                    const progress = snapshot.val();
+                    
+                    if (progress) {
+                        // 24時間以上経過している場合は削除
+                        const lastUpdated = new Date(progress.lastUpdated);
+                        const hoursSince = (Date.now() - lastUpdated.getTime()) / (1000 * 60 * 60);
+                        
                         if (hoursSince > 24) {
-                            await this.clearProgress(userId);
+                            console.log('🗑️ 古い進行状況を削除 (User: ' + userId + ')');
+                            await firebaseDB.ref('progress/' + userId).remove();
                             return null;
                         }
+                        
                         console.log('✅ 進行状況を復元 (User: ' + userId + ')');
                         return progress;
                     }
+                    
                     return null;
                 } catch (error) {
+                    console.error('❌ 進行状況ロードエラー:', error);
                     return null;
                 }
             },
             
             async clearProgress(userId) {
                 try {
-                    const response = await fetch(`${this.API_BASE}/api/progress/${userId}`, {
-                        method: 'DELETE'
-                    });
-                    const result = await response.json();
+                    await firebaseDB.ref('progress/' + userId).remove();
+                    delete AppData.progressData[userId];
                     console.log('🗑️ 進行状況をクリア (User: ' + userId + ')');
-                    return result.success || false;
+                    return true;
                 } catch (error) {
+                    console.error('❌ 進行状況クリアエラー:', error);
+                    return false;
+                }
+            },
+            
+            async loadAllProgress() {
+                try {
+                    const snapshot = await firebaseDB.ref('progress').once('value');
+                    const allProgress = snapshot.val();
+                    
+                    AppData.progressData = allProgress || {};
+                    
+                    console.log('✅ 全ユーザーの進捗データをロード', {
+                        loaded: Object.keys(AppData.progressData).length,
+                        total: AppData.users.length
+                    });
+                    
+                    return true;
+                } catch (error) {
+                    console.error('❌ 進捗一括ロードエラー:', error);
                     return false;
                 }
             },
             
             async clear() {
                 try {
-                    const response = await fetch(`${this.API_BASE}/api/data`, {
-                        method: 'DELETE'
-                    });
-                    const result = await response.json();
-                    return result.success || false;
+                    await firebaseDB.ref('data').remove();
+                    await firebaseDB.ref('progress').remove();
+                    console.log('🗑️ Firebaseのすべてのデータをクリアしました');
+                    return true;
                 } catch (error) {
+                    console.error('❌ クリアエラー:', error);
                     return false;
                 }
             },
             
             async export() {
                 try {
-                    const response = await fetch(`${this.API_BASE}/api/export`);
-                    if (response.ok) {
-                        return await response.text();
+                    const snapshot = await firebaseDB.ref('data').once('value');
+                    const data = snapshot.val();
+                    
+                    if (data) {
+                        return JSON.stringify(data, null, 2);
                     }
                     return null;
                 } catch (error) {
+                    console.error('❌ エクスポートエラー:', error);
                     return null;
                 }
             },
@@ -1160,44 +1236,12 @@
             async import(jsonString) {
                 try {
                     const data = JSON.parse(jsonString);
-                    const response = await fetch(`${this.API_BASE}/api/import`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data)
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        await this.load();
-                        return true;
-                    }
-                    return false;
-                } catch (error) {
-                    return false;
-                }
-            },
-
-            async loadAllProgress() {
-                try {
-                    const progressData = {};
-                    const progressPromises = AppData.users.map(async (user) => {
-                        try {
-                            const progress = await this.loadProgress(user.id);
-                            if (progress) {
-                                progressData[user.id] = progress;
-                            }
-                        } catch (error) {
-                            console.error(`進捗ロードエラー (User ${user.id}):`, error);
-                        }
-                    });
-                    await Promise.all(progressPromises);
-                    AppData.progressData = progressData;
-                    console.log('✅ 全ユーザーの進捗データをロード', {
-                        loaded: Object.keys(progressData).length,
-                        total: AppData.users.length
-                    });
+                    await firebaseDB.ref('data').set(data);
+                    await this.load();
+                    console.log('✅ データをインポートしました');
                     return true;
                 } catch (error) {
-                    console.error('❌ 進捗一括ロードエラー:', error);
+                    console.error('❌ インポートエラー:', error);
                     return false;
                 }
             }
