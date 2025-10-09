@@ -1007,14 +1007,12 @@
                 } catch (error) {
                     return false;
                 }
-<<< HEAD
             },
 
             async loadAllProgress() {
                 try {
                     const progressData = {};
             };
->>> 82cf5fc497cde1e13ce261ac4781d7eef901c08f
                     const progressPromises = AppData.users.map(async (user) => {
                         try {
                             const progress = await this.loadProgress(user.id);
@@ -1034,7 +1032,6 @@
                     return true;
                 } catch (error) {
                     console.error('❌ 進捗一括ロードエラー:', error);
-<<< HEAD
                     return false;
                 }
             },
@@ -1061,7 +1058,6 @@
                     return true;
                 } catch (error) {
                     console.error('❌ 進捗一括ロードエラー:', error);
->>> 82cf5fc497cde1e13ce261ac4781d7eef901c08f
                     return false;
                 }
             }
