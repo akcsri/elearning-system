@@ -926,7 +926,6 @@
                     const result = await response.json();
                     if (result.success) {
                         console.log('💾 進行状況を保存');
-            AppData.progressData[userId] = progress;
                         return true;
                     }
                     return false;
@@ -1007,32 +1006,6 @@
                 } catch (error) {
                     return false;
                 }
-            },
-
-            async loadAllProgress() {
-                try {
-                    const progressData = {};
-                    const progressPromises = AppData.users.map(async (user) => {
-                        try {
-                            const progress = await this.loadProgress(user.id);
-                            if (progress) {
-                                progressData[user.id] = progress;
-                            }
-                        } catch (error) {
-                            console.error(`進捗ロードエラー (ユーザー${user.id}):`, error);
-                        }
-                    });
-                    await Promise.all(progressPromises);
-                    AppData.progressData = progressData;
-                    console.log('✅ 全ユーザーの進捗データをロードしました', {
-                        loaded: Object.keys(progressData).length,
-                        total: AppData.users.length
-                    });
-                    return true;
-                } catch (error) {
-                    console.error('❌ 進捗一括ロードエラー:', error);
-                    return false;
-                }
             }
         };
 
@@ -1041,7 +1014,6 @@
             currentCourse: null,
             analysisResult: null,
             savedProgress: null,
-    progressData: {},
             users: [
                 {
                     id: 1,
@@ -1243,7 +1215,6 @@
 
             async init() {
                 await Database.load();
-        await Database.loadAllProgress();
                 
                 setInterval(() => {
                     if (AppData.courses.length > 0 || AppData.learningRecords.length > 0) {
@@ -1473,7 +1444,7 @@
                                     ${learners.map(learner => {
                                         const records = AppData.learningRecords.filter(r => r.userId === learner.id);
                                         const latestRecord = records.length > 0 ? records[records.length - 1] : null;
-                                        const progress = AppData.progressData[learner.id];
+                                        const progress = Database.loadProgress(learner.id);
                                         
                                         let statusBadge = '<span style="background: #e5e7eb; color: #6b7280; padding: 4px 12px; border-radius: 12px; font-size: 12px;">未開始</span>';
                                         let testResult = '-';
@@ -2655,7 +2626,7 @@
             viewLearnerDetail(userId) {
                 const learner = AppData.users.find(u => u.id === userId);
                 const records = AppData.learningRecords.filter(r => r.userId === userId);
-                const progress = AppData.progressData[userId];
+                const progress = Database.loadProgress(userId);
                 
                 if (!learner) return;
                 
