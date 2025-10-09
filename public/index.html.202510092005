@@ -1845,19 +1845,8 @@
             },
 
             renderTrainingScreen(state, totalSlides) {
-                // 🔧 修正: デバッグ情報を追加
                 const courseImages = AppData.currentCourse && AppData.currentCourse.slideImages 
-    
-                console.log('🖼️ スライド表示:', {
-                    slideIndex: state.slideIndex + 1,
-                    totalSlides: totalSlides,
-                    hasCourse: !!AppData.currentCourse,
-                    courseTitle: AppData.currentCourse?.title || 'なし',
-                    courseImageCount: courseImages.length,
-                    willShowCourseImage: courseImages.length > state.slideIndex,
-                    willShowDemoImage: slideImages.length > state.slideIndex
-                });
-                                    ? AppData.currentCourse.slideImages 
+                    ? AppData.currentCourse.slideImages 
                     : [];
                 
                 let imageToShow = null;
@@ -2097,26 +2086,8 @@
                         AppData.savedProgress = progress;
                     }
                     
-                    // 🔧 修正: 進行状況を読み込んでからコースを設定
-                    const progress = await Database.loadProgress(user.id);
-                    if (progress) {
-                        AppData.savedProgress = progress;
-                        // 進行状況にコースIDがある場合、そのコースを優先的に設定
-                        if (progress.courseId) {
-                            const course = AppData.courses.find(c => c.id === progress.courseId);
-                            if (course) {
-                                AppData.currentCourse = course;
-                                console.log('✅ 進行状況からコースを復元:', course.title, 
-                                           '画像数:', course.slideImages?.length || 0);
-                            }
-                        }
-                    }
-                    
-                    // コースが設定されていない場合、デフォルトで最初のコースを設定
-                    if (!AppData.currentCourse && AppData.courses.length > 0) {
+                    if (AppData.courses.length > 0) {
                         AppData.currentCourse = AppData.courses[0];
-                        console.log('✅ デフォルトコースを設定:', AppData.currentCourse.title, 
-                                   '画像数:', AppData.currentCourse.slideImages?.length || 0);
                     }
                     
                     if (user.role === 'admin') {
@@ -2162,8 +2133,6 @@
             async switchToLearning() {
                 if (AppData.courses.length > 0 && !AppData.currentCourse) {
                     AppData.currentCourse = AppData.courses[0];
-                    console.log('✅ 学習画面: コースを設定:', AppData.currentCourse.title,
-                               '画像数:', AppData.currentCourse.slideImages?.length || 0);
                 }
                 
                 this.currentView = 'learning';
@@ -2216,32 +2185,11 @@
                         showExplanations: AppData.savedProgress.showExplanations || {}
                     };
                     
-                    // 🔧 修正: コース復元のログを追加
                     if (AppData.savedProgress.courseId) {
                         const course = AppData.courses.find(c => c.id === AppData.savedProgress.courseId);
                         if (course) {
                             AppData.currentCourse = course;
-                            console.log('✅ 学習再開: コースを復元:', course.title,
-                                       '画像数:', course.slideImages?.length || 0,
-                                       '現在のスライド:', AppData.learningState.slideIndex + 1);
-                        } else {
-                            console.warn('⚠️ 警告: 進行状況のコースID', AppData.savedProgress.courseId, 
-                                        'が見つかりません');
-                            // フォールバック: デフォルトコースを使用
-                            if (AppData.courses.length > 0) {
-                                AppData.currentCourse = AppData.courses[0];
-                                console.log('✅ デフォルトコースを使用:', AppData.currentCourse.title);
-                            }
                         }
-                    } else {
-                        console.warn('⚠️ 警告: 進行状況にcourseIdがありません');
-                        if (!AppData.currentCourse && AppData.courses.length > 0) {
-                            AppData.currentCourse = AppData.courses[0];
-                            console.log('✅ デフォルトコースを設定:', AppData.currentCourse.title);
-                        }
-                    }
-                    
-                    
                     }
                     
                     AppData.savedProgress = null;
@@ -2256,19 +2204,9 @@
                     }
                     AppData.savedProgress = null;
                     
-                    // 🔧 修正: コース設定の確認とログ追加
-                if (!AppData.currentCourse && AppData.courses.length > 0) {
-                    AppData.currentCourse = AppData.courses[0];
-                    console.log('✅ 最初から開始: コースを設定:', AppData.currentCourse.title,
-                               '画像数:', AppData.currentCourse.slideImages?.length || 0);
-                } else if (AppData.currentCourse) {
-                    console.log('✅ 最初から開始: 既存コースを使用:', AppData.currentCourse.title,
-                               '画像数:', AppData.currentCourse.slideImages?.length || 0);
-                } else {
-                    console.error('❌ エラー: 利用可能なコースがありません');
-                    alert('エラー: 利用可能なコースがありません。管理者に連絡してください。');
-                    return;
-                }
+                    if (!AppData.currentCourse && AppData.courses.length > 0) {
+                        AppData.currentCourse = AppData.courses[0];
+                    }
                     
                     AppData.learningState = {
                         screen: 'start',
@@ -2571,18 +2509,8 @@
                     return;
                 }
                 
-                // 🔧 修正: コース確認とログ追加
                 if (!AppData.currentCourse && AppData.courses.length > 0) {
                     AppData.currentCourse = AppData.courses[0];
-                    console.log('✅ 研修開始: コースを設定:', AppData.currentCourse.title,
-                               '画像数:', AppData.currentCourse.slideImages?.length || 0);
-                } else if (!AppData.currentCourse) {
-                    console.error('❌ エラー: 利用可能なコースがありません');
-                    alert('エラー: 利用可能なコースがありません。管理者に連絡してください。');
-                    return;
-                } else {
-                    console.log('✅ 研修開始: 既存コースを使用:', AppData.currentCourse.title,
-                               '画像数:', AppData.currentCourse.slideImages?.length || 0);
                 }
 
                 AppData.learningState.userName = userName;
@@ -2970,29 +2898,6 @@
                 }
             }
         };
-        // デバッグユーティリティ
-        function debugCourseInfo() {
-            console.log('=== コース情報 ===');
-            console.log('現在のコース:', AppData.currentCourse?.title || '未設定');
-            console.log('コースID:', AppData.currentCourse?.id || '未設定');
-            console.log('総コース数:', AppData.courses.length);
-            console.log('スライド画像数:', AppData.currentCourse?.slideImages?.length || 0);
-            
-            if (AppData.currentCourse?.slideImages?.length > 0) {
-                console.log('画像1サンプル:', AppData.currentCourse.slideImages[0].data?.substring(0, 50) + '...');
-            }
-            
-            console.log('現在のユーザー:', AppData.currentUser?.name || '未ログイン');
-            console.log('学習状態:', AppData.learningState.screen);
-            console.log('現在のスライド:', AppData.learningState.slideIndex + 1);
-            
-            return '✅ デバッグ情報をコンソールに出力しました';
-        }
-
-        // グローバルスコープに追加
-        if (typeof window !== 'undefined') {
-            window.debugCourseInfo = debugCourseInfo;
-        }
 
         // アプリ起動
         document.addEventListener('DOMContentLoaded', () => {
