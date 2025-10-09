@@ -1007,6 +1007,38 @@
                 } catch (error) {
                     return false;
                 }
+<<<<<<< HEAD
+            },
+
+            async loadAllProgress() {
+                try {
+                    const progressData = {};
+=======
+            };
+>>>>>>> 82cf5fc497cde1e13ce261ac4781d7eef901c08f
+                    const progressPromises = AppData.users.map(async (user) => {
+                        try {
+                            const progress = await this.loadProgress(user.id);
+                            if (progress) {
+                                progressData[user.id] = progress;
+                            }
+                        } catch (error) {
+                            console.error(`進捗ロードエラー (ユーザー${user.id}):`, error);
+                        }
+                    });
+                    await Promise.all(progressPromises);
+                    AppData.progressData = progressData;
+                    console.log('✅ 全ユーザーの進捗データをロードしました', {
+                        loaded: Object.keys(progressData).length,
+                        total: AppData.users.length
+                    });
+                    return true;
+                } catch (error) {
+                    console.error('❌ 進捗一括ロードエラー:', error);
+<<<<<<< HEAD
+=======
+                    return false;
+                }
             },
 
             async loadAllProgress() {
@@ -1031,6 +1063,7 @@
                     return true;
                 } catch (error) {
                     console.error('❌ 進捗一括ロードエラー:', error);
+>>>>>>> 82cf5fc497cde1e13ce261ac4781d7eef901c08f
                     return false;
                 }
             }
@@ -1244,9 +1277,13 @@
 
             async init() {
                 await Database.load();
+<<<<<<< HEAD
         await Database.loadAllProgress();
                 
                 setInterval(() => {
+=======
+        await Database.loadAllProgress();setInterval(() => {
+>>>>>>> 82cf5fc497cde1e13ce261ac4781d7eef901c08f
                     if (AppData.courses.length > 0 || AppData.learningRecords.length > 0) {
                         Database.save();
                     }
