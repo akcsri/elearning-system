@@ -1012,33 +1012,6 @@
             async loadAllProgress() {
                 try {
                     const progressData = {};
-            };
-                    const progressPromises = AppData.users.map(async (user) => {
-                        try {
-                            const progress = await this.loadProgress(user.id);
-                            if (progress) {
-                                progressData[user.id] = progress;
-                            }
-                        } catch (error) {
-                            console.error(`進捗ロードエラー (ユーザー${user.id}):`, error);
-                        }
-                    });
-                    await Promise.all(progressPromises);
-                    AppData.progressData = progressData;
-                    console.log('✅ 全ユーザーの進捗データをロードしました', {
-                        loaded: Object.keys(progressData).length,
-                        total: AppData.users.length
-                    });
-                    return true;
-                } catch (error) {
-                    console.error('❌ 進捗一括ロードエラー:', error);
-                    return false;
-                }
-            },
-
-            async loadAllProgress() {
-                try {
-                    const progressData = {};
                     const progressPromises = AppData.users.map(async (user) => {
                         try {
                             const progress = await this.loadProgress(user.id);
@@ -1061,15 +1034,14 @@
                     return false;
                 }
             }
-        
-        };
+            };  // ← Databaseオブジェクトの終わり
 
         const AppData = {
             currentUser: null,
             currentCourse: null,
             analysisResult: null,
             savedProgress: null,
-    progressData: {},
+            progressData: {},
             users: [
                 {
                     id: 1,
@@ -1271,12 +1243,9 @@
 
             async init() {
                 await Database.load();
-<<< HEAD
-        await Database.loadAllProgress();
+                await Database.loadAllProgress();
                 
                 setInterval(() => {
-        await Database.loadAllProgress();setInterval(() => {
->>> 82cf5fc497cde1e13ce261ac4781d7eef901c08f
                     if (AppData.courses.length > 0 || AppData.learningRecords.length > 0) {
                         Database.save();
                     }
@@ -1285,7 +1254,7 @@
                 setInterval(() => {
                     if (AppData.currentUser && 
                         (AppData.learningState.screen === 'training' || 
-                         AppData.learningState.screen === 'quiz')) {
+                        AppData.learningState.screen === 'quiz')) {
                         Database.saveProgress(AppData.currentUser.id);
                     }
                 }, 30000);
