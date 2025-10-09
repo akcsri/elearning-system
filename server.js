@@ -56,6 +56,77 @@ async function initializeDataDirectory() {
                         email: 'yoshiaki.fujimori@csri-japan.com',
                         role: 'user',
                         department: 'インベストメント部'
+                    },
+                    {
+                        id: 4,
+                        username: 'user3',
+                        password: 'user3123',
+                        name: '堀内 駿太郎',
+                        email: 'shuntaro.horiuchi@csri-japan.com',
+                        role: 'user',
+                        department: 'インベストメント部'
+                    },
+                    {
+                        id: 5,
+                        username: 'user4',
+                        password: 'user4123',
+                        name: '髙橋 邦比呂',
+                        email: 'kunihiro.takahashi@csri-japan.com',
+                        role: 'user',
+                        department: 'インベストメント部'
+                    },                {
+                        id: 6,
+                        username: 'user5',
+                        password: 'user5123',
+                        name: '金井 駿太朗',
+                        email: 'shuntaro.kanai@csri-japan.com',
+                        role: 'user',
+                        department: 'インベストメント部'
+                    },
+                    {
+                        id: 7,
+                        username: 'user6',
+                        password: 'user6123',
+                        name: '塩谷 輝',
+                        email: 'hikaru.shioya@csri-japan.com',
+                        role: 'user',
+                        department: 'インベストメント部'
+                    },
+                    {
+                        id: 8,
+                        username: 'user7',
+                        password: 'user7123',
+                        name: '嶋﨑 江美',
+                        email: 'emi.shimazaki@csri-japan.com',
+                        role: 'user',
+                        department: 'インベストメント部'
+                    },
+                    {
+                        id: 9,
+                        username: 'user8',
+                        password: 'user8123',
+                        name: '吉田 愛美',
+                        email: 'manami.yoshida@csri-japan.com',
+                        role: 'user',
+                        department: 'オペレーションズ部'
+                    },
+                    {
+                        id: 10,
+                        username: 'user9',
+                        password: 'user9123',
+                        name: '金子 明彦',
+                        email: 'akihiko.kaneko@csri-japan.com',
+                        role: 'user',
+                        department: 'オペレーションズ部'
+                    },
+                    {
+                        id: 11,
+                        username: 'user10',
+                        password: 'user10123',
+                        name: '川端 真至',
+                        email: 'shinji.kawahata@csri-japan.com',
+                        role: 'user',
+                        department: 'オペレーションズ部'
                     }
                 ],
                 courses: [],
