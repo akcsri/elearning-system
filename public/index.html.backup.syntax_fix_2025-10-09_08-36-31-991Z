@@ -1007,34 +1007,12 @@
                 } catch (error) {
                     return false;
                 }
-            },
-            
+            }
+        };
+
             async loadAllProgress() {
                 try {
                     const progressData = {};
-                    const progressPromises = AppData.users.map(async (user) => {
-                        try {
-                            const progress = await this.loadProgress(user.id);
-                            if (progress) {
-                                progressData[user.id] = progress;
-                            }
-                        } catch (error) {
-                            console.error(`進捗ロードエラー (ユーザー${user.id}):`, error);
-                        }
-                    });
-                    await Promise.all(progressPromises);
-                    AppData.progressData = progressData;
-                    console.log('✅ 全ユーザーの進捗データをロードしました', {
-                        loaded: Object.keys(progressData).length,
-                        total: AppData.users.length
-                    });
-                    return true;
-                } catch (error) {
-                    console.error('❌ 進捗一括ロードエラー:', error);
-                    return false;
-                }
-            }
-        };;
                     const progressPromises = AppData.users.map(async (user) => {
                         try {
                             const progress = await this.loadProgress(user.id);
