@@ -1036,9 +1036,10 @@
                     if (response.ok) {
                         const data = await response.json();
                         
-                        AppData.users = data.users || this.getInitialUsers();
-                        AppData.courses = data.courses || [];
-                        AppData.learningRecords = data.learningRecords || [];
+                        // 🔧 修正: データを確実に設定
+                        AppData.users = data.users && Array.isArray(data.users) ? data.users : this.getInitialUsers();
+                        AppData.courses = data.courses && Array.isArray(data.courses) ? data.courses : [];
+                        AppData.learningRecords = data.learningRecords && Array.isArray(data.learningRecords) ? data.learningRecords : [];
                         
                         console.log('✅ DBからデータを読み込みました', {
                             users: AppData.users.length,
@@ -1046,6 +1047,17 @@
                             records: AppData.learningRecords.length,
                             lastUpdated: data.lastUpdated || '不明'
                         });
+                        
+                        // 🔧 追加: コース情報を詳細ログ
+                        if (AppData.courses.length > 0) {
+                            console.log('📚 利用可能なコース:');
+                            AppData.courses.forEach(function(course, index) {
+                                console.log(`  ${index + 1}. ${course.title} (ID: ${course.id}, 画像: ${course.slideImages ? course.slideImages.length : 0}枚)`);
+                            });
+                        } else {
+                            console.warn('⚠️ 警告: コースが1つもありません');
+                        }
+                        
                         return true;
                     } else {
                         console.log('⚠️ DBにデータがありません');
@@ -2102,31 +2114,52 @@
 
                 if (user) {
                     AppData.currentUser = user;
+                    console.log('✅ ログイン成功:', user.name, '(Role:', user.role + ')');
                     
+                    // 🔧 修正: まずDBを再読み込み
+                    await Database.load();
+                    console.log('📚 読み込み後のコース数:', AppData.courses.length);
+                    
+                    // 進行状況を読み込み
                     const progress = await Database.loadProgress(user.id);
                     if (progress) {
                         AppData.savedProgress = progress;
+                        console.log('📖 進行状況を発見:', progress.screen, 'スライド:', progress.slideIndex);
+                        
+                        // 進行状況からコースを復元
                         if (progress.courseId) {
                             const course = AppData.courses.find(function(c) { return c.id === progress.courseId; });
                             if (course) {
                                 AppData.currentCourse = course;
                                 console.log('✅ 進行状況からコースを復元:', course.title, 
                                         '画像数:', course.slideImages ? course.slideImages.length : 0);
+                            } else {
+                                console.warn('⚠️ 進行状況のコースID', progress.courseId, 'が見つかりません');
                             }
+                        }
+                    } else {
+                        console.log('📭 進行状況なし（初回受講）');
+                    }
+                    
+                    // コースが設定されていない場合、デフォルトコースを設定
+                    if (!AppData.currentCourse) {
+                        if (AppData.courses.length > 0) {
+                            AppData.currentCourse = AppData.courses[0];
+                            console.log('✅ デフォルトコースを設定:', AppData.currentCourse.title, 
+                                    '画像数:', AppData.currentCourse.slideImages ? AppData.currentCourse.slideImages.length : 0);
+                        } else {
+                            console.error('❌ エラー: コースが1つもありません！');
+                            console.log('AppData.courses:', AppData.courses);
                         }
                     }
                     
-                    if (!AppData.currentCourse && AppData.courses.length > 0) {
-                        AppData.currentCourse = AppData.courses[0];
-                        console.log('✅ デフォルトコースを設定:', AppData.currentCourse.title, 
-                                '画像数:', AppData.currentCourse.slideImages ? AppData.currentCourse.slideImages.length : 0);
-                    }
-                    
+                    // ビューを切り替え
                     if (user.role === 'admin') {
                         this.currentView = 'admin';
                     } else {
                         this.currentView = 'learning';
                     }
+                    
                     this.render();
                 } else {
                     alert('ログインに失敗しました');
