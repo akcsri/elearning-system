@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>インサイダー取引規制 eラーニングシステム - DB完全管理版</title>
+    <title>インサイダー取引規制 eラーニングシステム - DB完全管理版（競合修正版）</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * {
@@ -875,7 +875,7 @@
         const firebaseDB = firebase.database();
 
         // ========================================
-        // Database管理 - Firebase Realtime版
+        // Database管理 - 競合防止版
         // ========================================
         const Database = {
             realtimeListeners: {},
@@ -996,7 +996,18 @@
                     if (data) {
                         AppData.users = data.users || this.getInitialUsers();
                         AppData.courses = data.courses || [];
-                        AppData.learningRecords = data.learningRecords || [];
+                        
+                        // 🔧 修正: learningRecordsをオブジェクトから配列に変換
+                        if (data.learningRecords) {
+                            if (Array.isArray(data.learningRecords)) {
+                                AppData.learningRecords = data.learningRecords;
+                            } else {
+                                // オブジェクト形式の場合は配列に変換
+                                AppData.learningRecords = Object.values(data.learningRecords);
+                            }
+                        } else {
+                            AppData.learningRecords = [];
+                        }
                         
                         console.log('✅ Firebaseからデータを読み込みました', {
                             users: AppData.users.length,
@@ -1025,40 +1036,57 @@
                 }
             },
             
-            // 🔥 リアルタイム同期
+            // 🔥 リアルタイム同期 - 学習記録の個別監視
             startRealtimeSync() {
-                console.log('🔄 リアルタイム同期を開始します');
+                console.log('🔄 リアルタイム同期を開始します（学習記録は個別監視）');
                 
-                // データ変更を監視
-                firebaseDB.ref('data').on('value', function(snapshot) {
-                    const data = snapshot.val();
-                    if (data) {
-                        const oldCoursesLength = AppData.courses.length;
-                        const oldRecordsLength = AppData.learningRecords.length;
-                        
-                        AppData.users = data.users || Database.getInitialUsers();
-                        AppData.courses = data.courses || [];
-                        AppData.learningRecords = data.learningRecords || [];
-                        
-                        // 変更があれば通知
-                        if (oldCoursesLength !== AppData.courses.length) {
-                            console.log('🔄 コースが更新されました（他のブラウザから）', {
+                // ユーザーとコースの監視
+                firebaseDB.ref('data/users').on('value', function(snapshot) {
+                    const users = snapshot.val();
+                    if (users) {
+                        AppData.users = Array.isArray(users) ? users : Object.values(users);
+                        console.log('🔄 ユーザーデータが更新されました');
+                    }
+                });
+                
+                firebaseDB.ref('data/courses').on('value', function(snapshot) {
+                    const courses = snapshot.val();
+                    if (courses) {
+                        const oldLength = AppData.courses.length;
+                        AppData.courses = Array.isArray(courses) ? courses : Object.values(courses);
+                        if (oldLength !== AppData.courses.length) {
+                            console.log('🔄 コースが更新されました', {
                                 courses: AppData.courses.length
                             });
                         }
+                    }
+                });
+                
+                // 🔧 修正: 学習記録の個別監視
+                firebaseDB.ref('learningRecords').on('value', function(snapshot) {
+                    const records = snapshot.val();
+                    const oldLength = AppData.learningRecords.length;
+                    
+                    if (records) {
+                        // オブジェクトから配列に変換
+                        AppData.learningRecords = Object.keys(records).map(function(key) {
+                            return records[key];
+                        });
                         
-                        if (oldRecordsLength !== AppData.learningRecords.length) {
+                        if (oldLength !== AppData.learningRecords.length) {
                             console.log('🔄 学習記録が更新されました（他のブラウザから）', {
                                 records: AppData.learningRecords.length,
-                                新規: AppData.learningRecords.length - oldRecordsLength
+                                追加: AppData.learningRecords.length - oldLength
                             });
+                            
+                            // 画面を自動更新（管理画面の場合のみ）
+                            if (App && App.render && AppData.currentUser && AppData.currentUser.role === 'admin') {
+                                console.log('📊 管理画面を自動更新します');
+                                App.render();
+                            }
                         }
-                        
-                        // 画面を自動更新（管理画面の場合のみ）
-                        if (App && App.render && AppData.currentUser && AppData.currentUser.role === 'admin') {
-                            console.log('📊 管理画面を自動更新します');
-                            App.render();
-                        }
+                    } else {
+                        AppData.learningRecords = [];
                     }
                 });
                 
@@ -1070,11 +1098,10 @@
                     const dataToSave = {
                         users: AppData.users,
                         courses: AppData.courses,
-                        learningRecords: AppData.learningRecords,
                         lastUpdated: new Date().toISOString()
                     };
                     
-                    await firebaseDB.ref('data').set(dataToSave);
+                    await firebaseDB.ref('data').update(dataToSave);
                     
                     console.log('💾 [' + new Date().toLocaleTimeString() + '] Firebaseに保存しました', {
                         users: AppData.users.length,
@@ -1089,6 +1116,25 @@
                 }
             },
             
+            // 🔧 新規: 学習記録を個別に保存
+            async saveLearningRecord(record) {
+                try {
+                    // 記録IDをキーとして個別に保存
+                    await firebaseDB.ref('learningRecords/' + record.id).set(record);
+                    
+                    console.log('💾 学習記録を個別保存しました', {
+                        recordId: record.id,
+                        userId: record.userId,
+                        userName: record.userName
+                    });
+                    
+                    return true;
+                } catch (error) {
+                    console.error('❌ 学習記録保存エラー:', error);
+                    return false;
+                }
+            },
+            
             async load() {
                 try {
                     const snapshot = await firebaseDB.ref('data').once('value');
@@ -1097,12 +1143,10 @@
                     if (data) {
                         AppData.users = data.users || this.getInitialUsers();
                         AppData.courses = data.courses || [];
-                        AppData.learningRecords = data.learningRecords || [];
                         
                         console.log('✅ Firebaseからデータをロードしました', {
                             users: AppData.users.length,
-                            courses: AppData.courses.length,
-                            records: AppData.learningRecords.length
+                            courses: AppData.courses.length
                         });
                         
                         // コース詳細をログ
@@ -1114,12 +1158,22 @@
                                         (course.slideImages ? course.slideImages.length : 0) + '枚)');
                             });
                         }
-                        
-                        return true;
-                    } else {
-                        console.log('⚠️ Firebaseにデータがありません');
-                        return false;
                     }
+                    
+                    // 🔧 修正: 学習記録を個別にロード
+                    const recordsSnapshot = await firebaseDB.ref('learningRecords').once('value');
+                    const recordsData = recordsSnapshot.val();
+                    
+                    if (recordsData) {
+                        AppData.learningRecords = Object.keys(recordsData).map(function(key) {
+                            return recordsData[key];
+                        });
+                        console.log('✅ 学習記録をロードしました:', AppData.learningRecords.length + '件');
+                    } else {
+                        AppData.learningRecords = [];
+                    }
+                    
+                    return true;
                 } catch (error) {
                     console.error('❌ ロードエラー:', error);
                     return false;
@@ -1216,6 +1270,7 @@
                 try {
                     await firebaseDB.ref('data').remove();
                     await firebaseDB.ref('progress').remove();
+                    await firebaseDB.ref('learningRecords').remove();
                     console.log('🗑️ Firebaseのすべてのデータをクリアしました');
                     return true;
                 } catch (error) {
@@ -1226,10 +1281,20 @@
             
             async export() {
                 try {
-                    const snapshot = await firebaseDB.ref('data').once('value');
-                    const data = snapshot.val();
+                    const dataSnapshot = await firebaseDB.ref('data').once('value');
+                    const recordsSnapshot = await firebaseDB.ref('learningRecords').once('value');
+                    
+                    const data = dataSnapshot.val();
+                    const recordsData = recordsSnapshot.val();
                     
                     if (data) {
+                        // 学習記録を配列に変換
+                        if (recordsData) {
+                            data.learningRecords = Object.values(recordsData);
+                        } else {
+                            data.learningRecords = [];
+                        }
+                        
                         return JSON.stringify(data, null, 2);
                     }
                     return null;
@@ -1242,7 +1307,23 @@
             async import(jsonString) {
                 try {
                     const data = JSON.parse(jsonString);
-                    await firebaseDB.ref('data').set(data);
+                    
+                    // ユーザーとコースを保存
+                    await firebaseDB.ref('data').set({
+                        users: data.users,
+                        courses: data.courses,
+                        lastUpdated: new Date().toISOString()
+                    });
+                    
+                    // 🔧 修正: 学習記録を個別に保存
+                    if (data.learningRecords && data.learningRecords.length > 0) {
+                        const recordsObject = {};
+                        data.learningRecords.forEach(function(record) {
+                            recordsObject[record.id] = record;
+                        });
+                        await firebaseDB.ref('learningRecords').set(recordsObject);
+                    }
+                    
                     await this.load();
                     console.log('✅ データをインポートしました');
                     return true;
@@ -1361,7 +1442,7 @@
             currentTab: 'dashboard',
 
             async init() {
-                console.log('🚀 アプリケーション起動 - DB完全管理版');
+                console.log('🚀 アプリケーション起動 - DB完全管理版（競合修正版）');
                 
                 // DB初期化（初回起動時は自動的に初期データを投入）
                 await Database.init();
@@ -1369,14 +1450,14 @@
                 // 全ユーザーの進捗データをロード
                 await Database.loadAllProgress();
                 
-                // 定期的にDBに自動保存（2秒ごと）
+                // 定期的にDBに自動保存（2秒ごと）- ただし学習記録は除外
                 setInterval(() => {
-                    if (AppData.users.length > 0 || AppData.courses.length > 0 || AppData.learningRecords.length > 0) {
+                    if (AppData.users.length > 0 || AppData.courses.length > 0) {
                         Database.save();
                     }
                 }, 2000);
                 
-                // 進行状況の定期保存（30秒ごと）
+                // 進行状況の定期保存(30秒ごと)
                 setInterval(() => {
                     if (AppData.currentUser && 
                         (AppData.learningState.screen === 'training' || 
@@ -1412,7 +1493,7 @@
                         <div class="header">
                             <div class="header-left">
                                 <h1>📚 eラーニングシステム</h1>
-                                <p>DB完全管理版</p>
+                                <p>DB完全管理版（競合修正版）</p>
                             </div>
                         </div>
                         <div class="login-screen">
@@ -1420,7 +1501,8 @@
                                 <h2>ログイン</h2>
                                 <div class="db-status">
                                     ✅ システムはデータベースと接続されています<br>
-                                    全てのデータはDBに記録・参照されます
+                                    🔧 学習記録の競合問題を修正済み<br>
+                                    📝 複数ブラウザから同時に記録しても消えません
                                 </div>
                                 <div class="form-group">
                                     <label>ユーザー名</label>
@@ -1445,7 +1527,7 @@
                         <div class="header">
                             <div class="header-left">
                                 <h1>📚 eラーニング管理システム</h1>
-                                <p>管理者ダッシュボード - DB完全管理版</p>
+                                <p>管理者ダッシュボード - DB完全管理版（競合修正版）</p>
                             </div>
                             <div class="header-right" style="text-align: right;">
                                 <div style="color: white; margin-bottom: 10px;">
@@ -1511,8 +1593,10 @@
                 return `
                     <div class="db-status">
                         💾 データベース接続状態: <strong>正常</strong><br>
-                        📊 全データはDBに記録されています（ユーザー: ${AppData.users.length}件、コース: ${totalCourses}件、学習記録: ${totalRecords}件）<br>
-                        🔄 自動保存: 有効（2秒ごと）
+                        🔧 競合問題修正版: <strong>有効</strong><br>
+                        📊 全データはDBに記録されています(ユーザー: ${AppData.users.length}件、コース: ${totalCourses}件、学習記録: ${totalRecords}件)<br>
+                        🔄 自動保存: 有効(2秒ごと)<br>
+                        ✅ 複数ブラウザ同時利用: 対応済み
                     </div>
                     
                     <div class="section-header">
@@ -1548,7 +1632,8 @@
                             ✅ 全データがDBに記録されています<br>
                             ✅ 自動保存機能が動作中<br>
                             ✅ 進行状況の復元機能が有効<br>
-                            ✅ ユーザー追加時に即座にDB保存
+                            ✅ ユーザー追加時に即座にDB保存<br>
+                            🔧 <strong>競合問題を修正済み</strong>:学習記録が消えません
                         </p>
                     </div>
                     
@@ -1880,7 +1965,7 @@
                             <ul>
                                 <li><span>📖</span> <span>研修スライド: ${totalSlides}枚</span></li>
                                 <li><span>✏️</span> <span>確認テスト: 4択式問題 ${totalQuestions}問</span></li>
-                                <li><span>⏱️</span> <span>所要時間: 約30〜40分</span></li>
+                                <li><span>⏱️</span> <span>所要時間: 約30~40分</span></li>
                                 <li><span>🎯</span> <span>合格基準: ${totalQuestions}問中8問以上正解</span></li>
                                 <li><span>🏆</span> <span>修了証: 合格者に発行</span></li>
                                 <li><span>💾</span> <span><strong>途中で中断しても進行状況をDBに保存</strong></span></li>
@@ -1911,7 +1996,6 @@
                     ? AppData.currentCourse.slideImages 
                     : [];
                 
-                // 🔧 修正: 実際のスライド数を使用
                 const actualTotalSlides = courseImages.length > 0 ? courseImages.length : 19;
                 
                 console.log('🖼️ スライド表示:', {
@@ -2186,7 +2270,7 @@
                             }
                         }
                     } else {
-                        console.log('📭 進行状況なし（初回受講）');
+                        console.log('🔭 進行状況なし(初回受講)');
                     }
                     
                     // コースが設定されていない場合、デフォルトコースを設定
@@ -2196,7 +2280,7 @@
                             console.log('✅ デフォルトコースを設定:', AppData.currentCourse.title, 
                                     '画像数:', AppData.currentCourse.slideImages ? AppData.currentCourse.slideImages.length : 0);
                         } else {
-                            console.error('❌ エラー: コースが1つもありません！');
+                            console.error('❌ エラー: コースが1つもありません!');
                             console.log('AppData.courses:', AppData.courses);
                         }
                     }
@@ -2775,10 +2859,11 @@
                     answers: AppData.learningState.answers
                 };
                 
-                AppData.learningRecords.push(record);
+                // 🔧 修正: 個別に学習記録を保存
+                await Database.saveLearningRecord(record);
                 
-                // 即座にDBに保存
-                await Database.save();
+                // ローカルの配列にも追加
+                AppData.learningRecords.push(record);
                 
                 if (AppData.currentUser) {
                     await Database.clearProgress(AppData.currentUser.id);
@@ -2841,11 +2926,11 @@
                         totalQuestions: questions.length
                     };
                     
-                    // learningRecordsに追加
-                    AppData.learningRecords.push(learningRecord);
+                    // 🔧 修正: 個別に保存
+                    await Database.saveLearningRecord(learningRecord);
                     
-                    // Firebaseに即座に保存
-                    await Database.save();
+                    // ローカルの配列にも追加
+                    AppData.learningRecords.push(learningRecord);
                     
                     console.log('✅ 学習記録を保存しました:', learningRecord);
                 }
@@ -2972,7 +3057,7 @@
                     progressHtml = `
                         <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #f59e0b;">
                             <h4 style="color: #92400e; margin-bottom: 10px;">⏸️ 進行中</h4>
-                            <p><strong>状態:</strong> ${progress.screen === 'training' ? '研修スライド閲覧中' : 'テスト回答中'}</p>
+                            <p><strong>状況:</strong> ${progress.screen === 'training' ? '研修スライド閲覧中' : 'テスト回答中'}</p>
                             ${progress.screen === 'training' ? 
                                 `<p><strong>進捗:</strong> スライド ${progress.slideIndex + 1} / 19</p>` :
                                 `<p><strong>進捗:</strong> ${Object.keys(progress.answers || {}).length} / 10 問回答済み</p>`
@@ -3137,30 +3222,7 @@
                 }
             }
         };
-        // デバッグユーティリティ
-        function debugCourseInfo() {
-            console.log('=== コース情報 ===');
-            console.log('現在のコース:', AppData.currentCourse?.title || '未設定');
-            console.log('コースID:', AppData.currentCourse?.id || '未設定');
-            console.log('総コース数:', AppData.courses.length);
-            console.log('スライド画像数:', AppData.currentCourse?.slideImages?.length || 0);
-            
-            if (AppData.currentCourse?.slideImages?.length > 0) {
-                console.log('画像1サンプル:', AppData.currentCourse.slideImages[0].data?.substring(0, 50) + '...');
-            }
-            
-            console.log('現在のユーザー:', AppData.currentUser?.name || '未ログイン');
-            console.log('学習状態:', AppData.learningState.screen);
-            console.log('現在のスライド:', AppData.learningState.slideIndex + 1);
-            
-            return '✅ デバッグ情報をコンソールに出力しました';
-        }
-
-        // グローバルスコープに追加
-        if (typeof window !== 'undefined') {
-            window.debugCourseInfo = debugCourseInfo;
-        }
-        // デバッグユーティリティ（互換性版）
+        // デバッグユーティリティ(互換性版)
         function debugCourseInfo() {
             console.log('=== コース情報 ===');
             console.log('現在のコース:', AppData.currentCourse ? AppData.currentCourse.title : '未設定');
@@ -3176,6 +3238,7 @@
             console.log('現在のユーザー:', AppData.currentUser ? AppData.currentUser.name : '未ログイン');
             console.log('学習状態:', AppData.learningState.screen);
             console.log('現在のスライド:', AppData.learningState.slideIndex + 1);
+            console.log('学習記録数:', AppData.learningRecords.length);
             
             return '✅ デバッグ情報をコンソールに出力しました';
         }
