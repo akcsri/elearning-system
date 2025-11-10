@@ -1,0 +1,23 @@
+services:
+  # PostgreSQLデータベース
+  - type: pserv
+    name: elearning-db
+    plan: free
+    databaseName: elearning
+    databaseUser: elearning_user
+
+  # Web Service
+  - type: web
+    name: elearning-system
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: elearning-db
+          property: connectionString
