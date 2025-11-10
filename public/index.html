@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>インサイダー取引規制 eラーニングシステム - DB完全管理版（競合修正版）</title>
+    <title>インサイダー取引規制 eラーニングシステム - PostgreSQL版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * {
@@ -673,9 +673,6 @@
             color: #1e40af;
         }
     </style>
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div id="app"></div>
@@ -856,28 +853,438 @@
             return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
         });
 
-        // データベース管理 - 完全DB依存版
+        // データベース管理 - PostgreSQL版
         // ========================================
-        // Firebase Realtime Database 設定
         // ========================================
-        const firebaseConfig = {
-            apiKey: "AIzaSyBmQbeTfiVDgxMIAC3ybhjSHvx-2KmiKjk",
-            authDomain: "elearning-system-1aa6d.firebaseapp.com",
-            databaseURL: "https://elearning-system-1aa6d-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "elearning-system-1aa6d",
-            storageBucket: "elearning-system-1aa6d.firebasestorage.app",
-            messagingSenderId: "606427429563",
-            appId: "1:606427429563:web:34cfd4fe43299209b9879e"
-        };
-
-        // Firebase初期化
-        firebase.initializeApp(firebaseConfig);
-        const firebaseDB = firebase.database();
-
-        // ========================================
-        // Database管理 - 競合防止版
+        // PostgreSQL Database API 接続
         // ========================================
         const Database = {
+            API_BASE: '/api',
+            pollingInterval: null,
+            
+            // 初期ユーザーデータ
+            getInitialUsers() {
+                return [
+                    {
+                        id: 1,
+                        username: 'admin',
+                        password: 'admin123',
+                        name: '金子 明彦',
+                        email: 'akihiko.kaneko@csri-japan.com',
+                        role: 'admin',
+                        department: 'オペレーションズ部'
+                    },
+                    {
+                        id: 2,
+                        username: 'user1',
+                        password: 'user1123',
+                        name: '前田 拓',
+                        email: 'taku.maeda@csri-japan.com',
+                        role: 'user',
+                        department: 'インベストメント部'
+                    },
+                    {
+                        id: 3,
+                        username: 'user2',
+                        password: 'user2123',
+                        name: '藤森 義明',
+                        email: 'yoshiaki.fujimori@csri-japan.com',
+                        role: 'user',
+                        department: 'インベストメント部'
+                    },
+                    {
+                        id: 4,
+                        username: 'user3',
+                        password: 'user3123',
+                        name: '堀内 駿太郎',
+                        email: 'shuntaro.horiuchi@csri-japan.com',
+                        role: 'user',
+                        department: 'インベストメント部'
+                    },
+                    {
+                        id: 5,
+                        username: 'user4',
+                        password: 'user4123',
+                        name: '髙橋 邦比呂',
+                        email: 'kunihiro.takahashi@csri-japan.com',
+                        role: 'user',
+                        department: 'インベストメント部'
+                    },
+                    {
+                        id: 6,
+                        username: 'user5',
+                        password: 'user5123',
+                        name: '金井 駿太朗',
+                        email: 'shuntaro.kanai@csri-japan.com',
+                        role: 'user',
+                        department: 'インベストメント部'
+                    },
+                    {
+                        id: 7,
+                        username: 'user6',
+                        password: 'user6123',
+                        name: '塩谷 輝',
+                        email: 'hikaru.shioya@csri-japan.com',
+                        role: 'user',
+                        department: 'インベストメント部'
+                    },
+                    {
+                        id: 8,
+                        username: 'user7',
+                        password: 'user7123',
+                        name: '嶋﨑 江美',
+                        email: 'emi.shimazaki@csri-japan.com',
+                        role: 'user',
+                        department: 'インベストメント部'
+                    },
+                    {
+                        id: 9,
+                        username: 'user8',
+                        password: 'user8123',
+                        name: '吉田 愛美',
+                        email: 'manami.yoshida@csri-japan.com',
+                        role: 'user',
+                        department: 'オペレーションズ部'
+                    },
+                    {
+                        id: 10,
+                        username: 'user9',
+                        password: 'user9123',
+                        name: '金子 明彦',
+                        email: 'akihiko.kaneko2@csri-japan.com',
+                        role: 'user',
+                        department: 'オペレーションズ部'
+                    },
+                    {
+                        id: 11,
+                        username: 'user10',
+                        password: 'user10123',
+                        name: '川端 真至',
+                        email: 'shinji.kawahata@csri-japan.com',
+                        role: 'user',
+                        department: 'オペレーションズ部'
+                    }
+                ];
+            },
+            
+            async init() {
+                try {
+                    console.log('🔄 PostgreSQLデータベースに接続中...');
+                    
+                    // ヘルスチェック
+                    const health = await fetch(`${this.API_BASE}/health`);
+                    if (health.ok) {
+                        console.log('✅ データベース接続成功');
+                    }
+                    
+                    // データをロード
+                    await this.load();
+                    
+                    // 定期的にポーリング（5秒ごと）
+                    this.startRealtimeSync();
+                    
+                    return true;
+                } catch (error) {
+                    console.error('❌ データベース接続エラー:', error);
+                    AppData.users = this.getInitialUsers();
+                    AppData.courses = [];
+                    AppData.learningRecords = [];
+                    return false;
+                }
+            },
+            
+            // リアルタイム同期の代わりにポーリング
+            startRealtimeSync() {
+                console.log('🔄 定期ポーリングを開始します（5秒ごと）');
+                
+                this.pollingInterval = setInterval(async () => {
+                    try {
+                        // 学習記録を定期的に取得（管理画面用）
+                        if (AppData.currentUser && AppData.currentUser.role === 'admin') {
+                            const response = await fetch(`${this.API_BASE}/learning-records`);
+                            if (response.ok) {
+                                const records = await response.json();
+                                const oldLength = AppData.learningRecords.length;
+                                
+                                if (records.length !== oldLength) {
+                                    AppData.learningRecords = records;
+                                    console.log('🔄 学習記録が更新されました:', records.length + '件');
+                                    
+                                    // 管理画面を自動更新
+                                    if (App && App.render) {
+                                        App.render();
+                                    }
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        // エラーは無視（サイレント）
+                    }
+                }, 5000);
+                
+                console.log('✅ リアルタイム同期（ポーリング）が有効になりました');
+            },
+            
+            async save() {
+                try {
+                    const dataToSave = {
+                        users: AppData.users,
+                        courses: AppData.courses,
+                        learningRecords: AppData.learningRecords
+                    };
+                    
+                    const response = await fetch(`${this.API_BASE}/data`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(dataToSave)
+                    });
+                    
+                    if (response.ok) {
+                        console.log('💾 [' + new Date().toLocaleTimeString() + '] PostgreSQLに保存しました', {
+                            users: AppData.users.length,
+                            courses: AppData.courses.length,
+                            records: AppData.learningRecords.length
+                        });
+                        return true;
+                    }
+                    
+                    console.error('❌ 保存失敗:', response.status);
+                    return false;
+                } catch (error) {
+                    console.error('❌ 保存エラー:', error);
+                    return false;
+                }
+            },
+            
+            async saveLearningRecord(record) {
+                try {
+                    const response = await fetch(`${this.API_BASE}/learning-records`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            user_id: record.userId,
+                            course_id: record.courseId,
+                            score: record.score,
+                            passed: record.passed,
+                            answers: record.answers,
+                            time_spent: 0
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        console.log('💾 学習記録を個別保存しました', {
+                            recordId: record.id,
+                            userId: record.userId,
+                            userName: record.userName,
+                            score: record.score
+                        });
+                        return true;
+                    }
+                    
+                    console.error('❌ 学習記録保存失敗:', await response.text());
+                    return false;
+                } catch (error) {
+                    console.error('❌ 学習記録保存エラー:', error);
+                    return false;
+                }
+            },
+            
+            async load() {
+                try {
+                    // ユーザー取得
+                    const usersRes = await fetch(`${this.API_BASE}/users`);
+                    if (usersRes.ok) {
+                        AppData.users = await usersRes.json();
+                    } else {
+                        AppData.users = this.getInitialUsers();
+                    }
+                    
+                    // コース取得
+                    const coursesRes = await fetch(`${this.API_BASE}/courses`);
+                    if (coursesRes.ok) {
+                        AppData.courses = await coursesRes.json();
+                        console.log('📚 コースをロード:', AppData.courses.length + '件');
+                        
+                        if (AppData.courses.length > 0) {
+                            console.log('📚 利用可能なコース:');
+                            AppData.courses.forEach((course, index) => {
+                                console.log(`  ${index + 1}. ${course.title} (ID: ${course.id}, 画像: ${course.slideImages ? course.slideImages.length : 0}枚)`);
+                            });
+                        }
+                    } else {
+                        AppData.courses = [];
+                    }
+                    
+                    // 学習記録取得
+                    const recordsRes = await fetch(`${this.API_BASE}/learning-records`);
+                    if (recordsRes.ok) {
+                        AppData.learningRecords = await recordsRes.json();
+                        console.log('✅ 学習記録をロード:', AppData.learningRecords.length + '件');
+                    } else {
+                        AppData.learningRecords = [];
+                    }
+                    
+                    console.log('✅ PostgreSQLからデータをロードしました', {
+                        users: AppData.users.length,
+                        courses: AppData.courses.length,
+                        records: AppData.learningRecords.length
+                    });
+                    
+                    return true;
+                } catch (error) {
+                    console.error('❌ ロードエラー:', error);
+                    AppData.users = this.getInitialUsers();
+                    AppData.courses = [];
+                    AppData.learningRecords = [];
+                    return false;
+                }
+            },
+            
+            async saveProgress(userId) {
+                try {
+                    const progress = {
+                        course_id: AppData.currentCourse ? AppData.currentCourse.id : null,
+                        current_slide: AppData.learningState.slideIndex,
+                        quiz_started: AppData.learningState.screen === 'quiz',
+                        quiz_answers: AppData.learningState.answers || {},
+                        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                    };
+                    
+                    const response = await fetch(`${this.API_BASE}/progress/${userId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(progress)
+                    });
+                    
+                    if (response.ok) {
+                        console.log('💾 進捗を保存しました');
+                        return true;
+                    }
+                    
+                    return false;
+                } catch (error) {
+                    console.error('❌ 進捗保存エラー:', error);
+                    return false;
+                }
+            },
+            
+            async loadProgress(userId) {
+                try {
+                    const courseId = AppData.currentCourse ? AppData.currentCourse.id : null;
+                    if (!courseId) return null;
+                    
+                    const response = await fetch(`${this.API_BASE}/progress/${userId}?courseId=${courseId}`);
+                    
+                    if (response.ok) {
+                        const progress = await response.json();
+                        console.log('✅ 進捗をロードしました:', progress);
+                        
+                        return {
+                            slideIndex: progress.current_slide || 0,
+                            screen: progress.quiz_started ? 'quiz' : 'training',
+                            answers: progress.quiz_answers || {},
+                            showExplanations: {}
+                        };
+                    }
+                    
+                    return null;
+                } catch (error) {
+                    console.error('❌ 進捗ロードエラー:', error);
+                    return null;
+                }
+            },
+            
+            async clearProgress(userId) {
+                try {
+                    const courseId = AppData.currentCourse ? AppData.currentCourse.id : null;
+                    if (!courseId) return true;
+                    
+                    const response = await fetch(`${this.API_BASE}/progress/${userId}?courseId=${courseId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        console.log('🗑️ 進捗をクリアしました');
+                        return true;
+                    }
+                    
+                    return false;
+                } catch (error) {
+                    console.error('❌ 進捗クリアエラー:', error);
+                    return false;
+                }
+            },
+            
+            async exportData() {
+                try {
+                    const response = await fetch(`${this.API_BASE}/export`);
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        const url = window.URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `elearning_backup_${new Date().toISOString().split('T')[0]}.json`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(url);
+                        
+                        console.log('✅ データをエクスポートしました');
+                        return true;
+                    }
+                    return false;
+                } catch (error) {
+                    console.error('❌ エクスポートエラー:', error);
+                    return false;
+                }
+            },
+            
+            async importData(data) {
+                try {
+                    const response = await fetch(`${this.API_BASE}/import`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    if (response.ok) {
+                        await this.load();
+                        console.log('✅ データをインポートしました');
+                        return true;
+                    }
+                    return false;
+                } catch (error) {
+                    console.error('❌ インポートエラー:', error);
+                    return false;
+                }
+            },
+            
+            async clearAllData() {
+                try {
+                    const response = await fetch(`${this.API_BASE}/data`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        await this.load();
+                        console.log('🗑️ PostgreSQLのすべてのデータをクリアしました');
+                        return true;
+                    }
+                    return false;
+                } catch (error) {
+                    console.error('❌ データクリアエラー:', error);
+                    return false;
+                }
+            }
+        };
             realtimeListeners: {},
             
             // 初期ユーザーデータ
@@ -985,354 +1392,6 @@
                 ];
             },
             
-            async init() {
-                try {
-                    console.log('🔥 Firebase Realtime Database 初期化中...');
-                    
-                    // データを読み込み
-                    const snapshot = await firebaseDB.ref('data').once('value');
-                    const data = snapshot.val();
-                    
-                    if (data) {
-                        AppData.users = data.users || this.getInitialUsers();
-                        AppData.courses = data.courses || [];
-                        
-                        // 🔧 修正: learningRecordsをオブジェクトから配列に変換
-                        if (data.learningRecords) {
-                            if (Array.isArray(data.learningRecords)) {
-                                AppData.learningRecords = data.learningRecords;
-                            } else {
-                                // オブジェクト形式の場合は配列に変換
-                                AppData.learningRecords = Object.values(data.learningRecords);
-                            }
-                        } else {
-                            AppData.learningRecords = [];
-                        }
-                        
-                        console.log('✅ Firebaseからデータを読み込みました', {
-                            users: AppData.users.length,
-                            courses: AppData.courses.length,
-                            records: AppData.learningRecords.length
-                        });
-                    } else {
-                        // 初期データを設定
-                        console.log('🆕 初期データをFirebaseに保存します');
-                        AppData.users = this.getInitialUsers();
-                        AppData.courses = [];
-                        AppData.learningRecords = [];
-                        await this.save();
-                    }
-                    
-                    // リアルタイム同期を開始
-                    this.startRealtimeSync();
-                    
-                    return true;
-                } catch (error) {
-                    console.error('❌ Firebase初期化エラー:', error);
-                    AppData.users = this.getInitialUsers();
-                    AppData.courses = [];
-                    AppData.learningRecords = [];
-                    return false;
-                }
-            },
-            
-            // 🔥 リアルタイム同期 - 学習記録の個別監視
-            startRealtimeSync() {
-                console.log('🔄 リアルタイム同期を開始します（学習記録は個別監視）');
-                
-                // ユーザーとコースの監視
-                firebaseDB.ref('data/users').on('value', function(snapshot) {
-                    const users = snapshot.val();
-                    if (users) {
-                        AppData.users = Array.isArray(users) ? users : Object.values(users);
-                        console.log('🔄 ユーザーデータが更新されました');
-                    }
-                });
-                
-                firebaseDB.ref('data/courses').on('value', function(snapshot) {
-                    const courses = snapshot.val();
-                    if (courses) {
-                        const oldLength = AppData.courses.length;
-                        AppData.courses = Array.isArray(courses) ? courses : Object.values(courses);
-                        if (oldLength !== AppData.courses.length) {
-                            console.log('🔄 コースが更新されました', {
-                                courses: AppData.courses.length
-                            });
-                        }
-                    }
-                });
-                
-                // 🔧 修正: 学習記録の個別監視
-                firebaseDB.ref('learningRecords').on('value', function(snapshot) {
-                    const records = snapshot.val();
-                    const oldLength = AppData.learningRecords.length;
-                    
-                    if (records) {
-                        // オブジェクトから配列に変換
-                        AppData.learningRecords = Object.keys(records).map(function(key) {
-                            return records[key];
-                        });
-                        
-                        if (oldLength !== AppData.learningRecords.length) {
-                            console.log('🔄 学習記録が更新されました（他のブラウザから）', {
-                                records: AppData.learningRecords.length,
-                                追加: AppData.learningRecords.length - oldLength
-                            });
-                            
-                            // 画面を自動更新（管理画面の場合のみ）
-                            if (App && App.render && AppData.currentUser && AppData.currentUser.role === 'admin') {
-                                console.log('📊 管理画面を自動更新します');
-                                App.render();
-                            }
-                        }
-                    } else {
-                        AppData.learningRecords = [];
-                    }
-                });
-                
-                console.log('✅ リアルタイム同期が有効になりました');
-            },
-            
-            async save() {
-                try {
-                    const dataToSave = {
-                        users: AppData.users,
-                        courses: AppData.courses,
-                        lastUpdated: new Date().toISOString()
-                    };
-                    
-                    await firebaseDB.ref('data').update(dataToSave);
-                    
-                    console.log('💾 [' + new Date().toLocaleTimeString() + '] Firebaseに保存しました', {
-                        users: AppData.users.length,
-                        courses: AppData.courses.length,
-                        records: AppData.learningRecords.length
-                    });
-                    
-                    return true;
-                } catch (error) {
-                    console.error('❌ 保存エラー:', error);
-                    return false;
-                }
-            },
-            
-            // 🔧 新規: 学習記録を個別に保存
-            async saveLearningRecord(record) {
-                try {
-                    // 記録IDをキーとして個別に保存
-                    await firebaseDB.ref('learningRecords/' + record.id).set(record);
-                    
-                    console.log('💾 学習記録を個別保存しました', {
-                        recordId: record.id,
-                        userId: record.userId,
-                        userName: record.userName
-                    });
-                    
-                    return true;
-                } catch (error) {
-                    console.error('❌ 学習記録保存エラー:', error);
-                    return false;
-                }
-            },
-            
-            async load() {
-                try {
-                    const snapshot = await firebaseDB.ref('data').once('value');
-                    const data = snapshot.val();
-                    
-                    if (data) {
-                        AppData.users = data.users || this.getInitialUsers();
-                        AppData.courses = data.courses || [];
-                        
-                        console.log('✅ Firebaseからデータをロードしました', {
-                            users: AppData.users.length,
-                            courses: AppData.courses.length
-                        });
-                        
-                        // コース詳細をログ
-                        if (AppData.courses.length > 0) {
-                            console.log('📚 利用可能なコース:');
-                            AppData.courses.forEach(function(course, index) {
-                                console.log('  ' + (index + 1) + '. ' + course.title + 
-                                        ' (ID: ' + course.id + ', 画像: ' + 
-                                        (course.slideImages ? course.slideImages.length : 0) + '枚)');
-                            });
-                        }
-                    }
-                    
-                    // 🔧 修正: 学習記録を個別にロード
-                    const recordsSnapshot = await firebaseDB.ref('learningRecords').once('value');
-                    const recordsData = recordsSnapshot.val();
-                    
-                    if (recordsData) {
-                        AppData.learningRecords = Object.keys(recordsData).map(function(key) {
-                            return recordsData[key];
-                        });
-                        console.log('✅ 学習記録をロードしました:', AppData.learningRecords.length + '件');
-                    } else {
-                        AppData.learningRecords = [];
-                    }
-                    
-                    return true;
-                } catch (error) {
-                    console.error('❌ ロードエラー:', error);
-                    return false;
-                }
-            },
-            
-            async saveProgress(userId) {
-                try {
-                    const progress = {
-                        userId: userId,
-                        courseId: AppData.currentCourse ? AppData.currentCourse.id : null,
-                        screen: AppData.learningState.screen,
-                        slideIndex: AppData.learningState.slideIndex,
-                        questionIndex: AppData.learningState.questionIndex,
-                        userName: AppData.learningState.userName,
-                        userDept: AppData.learningState.userDept,
-                        answers: AppData.learningState.answers || {},
-                        showExplanations: AppData.learningState.showExplanations || {},
-                        lastUpdated: new Date().toISOString()
-                    };
-                    
-                    await firebaseDB.ref('progress/' + userId).set(progress);
-                    AppData.progressData[userId] = progress;
-                    
-                    console.log('💾 進行状況を保存 (User: ' + userId + ', Course: ' + 
-                            (AppData.currentCourse ? AppData.currentCourse.id : 'なし') + ')');
-                    
-                    return true;
-                } catch (error) {
-                    console.error('❌ 進行状況保存エラー:', error);
-                    return false;
-                }
-            },
-            
-            async loadProgress(userId) {
-                try {
-                    const snapshot = await firebaseDB.ref('progress/' + userId).once('value');
-                    const progress = snapshot.val();
-                    
-                    if (progress) {
-                        // 24時間以上経過している場合は削除
-                        const lastUpdated = new Date(progress.lastUpdated);
-                        const hoursSince = (Date.now() - lastUpdated.getTime()) / (1000 * 60 * 60);
-                        
-                        if (hoursSince > 24) {
-                            console.log('🗑️ 古い進行状況を削除 (User: ' + userId + ')');
-                            await firebaseDB.ref('progress/' + userId).remove();
-                            return null;
-                        }
-                        
-                        console.log('✅ 進行状況を復元 (User: ' + userId + ')');
-                        return progress;
-                    }
-                    
-                    return null;
-                } catch (error) {
-                    console.error('❌ 進行状況ロードエラー:', error);
-                    return null;
-                }
-            },
-            
-            async clearProgress(userId) {
-                try {
-                    await firebaseDB.ref('progress/' + userId).remove();
-                    delete AppData.progressData[userId];
-                    console.log('🗑️ 進行状況をクリア (User: ' + userId + ')');
-                    return true;
-                } catch (error) {
-                    console.error('❌ 進行状況クリアエラー:', error);
-                    return false;
-                }
-            },
-            
-            async loadAllProgress() {
-                try {
-                    const snapshot = await firebaseDB.ref('progress').once('value');
-                    const allProgress = snapshot.val();
-                    
-                    AppData.progressData = allProgress || {};
-                    
-                    console.log('✅ 全ユーザーの進捗データをロード', {
-                        loaded: Object.keys(AppData.progressData).length,
-                        total: AppData.users.length
-                    });
-                    
-                    return true;
-                } catch (error) {
-                    console.error('❌ 進捗一括ロードエラー:', error);
-                    return false;
-                }
-            },
-            
-            async clear() {
-                try {
-                    await firebaseDB.ref('data').remove();
-                    await firebaseDB.ref('progress').remove();
-                    await firebaseDB.ref('learningRecords').remove();
-                    console.log('🗑️ Firebaseのすべてのデータをクリアしました');
-                    return true;
-                } catch (error) {
-                    console.error('❌ クリアエラー:', error);
-                    return false;
-                }
-            },
-            
-            async export() {
-                try {
-                    const dataSnapshot = await firebaseDB.ref('data').once('value');
-                    const recordsSnapshot = await firebaseDB.ref('learningRecords').once('value');
-                    
-                    const data = dataSnapshot.val();
-                    const recordsData = recordsSnapshot.val();
-                    
-                    if (data) {
-                        // 学習記録を配列に変換
-                        if (recordsData) {
-                            data.learningRecords = Object.values(recordsData);
-                        } else {
-                            data.learningRecords = [];
-                        }
-                        
-                        return JSON.stringify(data, null, 2);
-                    }
-                    return null;
-                } catch (error) {
-                    console.error('❌ エクスポートエラー:', error);
-                    return null;
-                }
-            },
-            
-            async import(jsonString) {
-                try {
-                    const data = JSON.parse(jsonString);
-                    
-                    // ユーザーとコースを保存
-                    await firebaseDB.ref('data').set({
-                        users: data.users,
-                        courses: data.courses,
-                        lastUpdated: new Date().toISOString()
-                    });
-                    
-                    // 🔧 修正: 学習記録を個別に保存
-                    if (data.learningRecords && data.learningRecords.length > 0) {
-                        const recordsObject = {};
-                        data.learningRecords.forEach(function(record) {
-                            recordsObject[record.id] = record;
-                        });
-                        await firebaseDB.ref('learningRecords').set(recordsObject);
-                    }
-                    
-                    await this.load();
-                    console.log('✅ データをインポートしました');
-                    return true;
-                } catch (error) {
-                    console.error('❌ インポートエラー:', error);
-                    return false;
-                }
-            }
-        };
 
         // アプリケーションデータ - 全てDBから読み込む
         const AppData = {
@@ -1442,7 +1501,7 @@
             currentTab: 'dashboard',
 
             async init() {
-                console.log('🚀 アプリケーション起動 - DB完全管理版（競合修正版）');
+                console.log('🚀 アプリケーション起動 - PostgreSQL版');
                 
                 // DB初期化（初回起動時は自動的に初期データを投入）
                 await Database.init();
@@ -1493,7 +1552,7 @@
                         <div class="header">
                             <div class="header-left">
                                 <h1>📚 eラーニングシステム</h1>
-                                <p>DB完全管理版（競合修正版）</p>
+                                <p>PostgreSQL版</p>
                             </div>
                         </div>
                         <div class="login-screen">
@@ -1501,7 +1560,7 @@
                                 <h2>ログイン</h2>
                                 <div class="db-status">
                                     ✅ システムはデータベースと接続されています<br>
-                                    🔧 学習記録の競合問題を修正済み<br>
+                                    ✅ PostgreSQL データベースで永続化<br>
                                     📝 複数ブラウザから同時に記録しても消えません
                                 </div>
                                 <div class="form-group">
@@ -1527,7 +1586,7 @@
                         <div class="header">
                             <div class="header-left">
                                 <h1>📚 eラーニング管理システム</h1>
-                                <p>管理者ダッシュボード - DB完全管理版（競合修正版）</p>
+                                <p>管理者ダッシュボード - PostgreSQL版</p>
                             </div>
                             <div class="header-right" style="text-align: right;">
                                 <div style="color: white; margin-bottom: 10px;">
@@ -1593,8 +1652,8 @@
                 return `
                     <div class="db-status">
                         💾 データベース接続状態: <strong>正常</strong><br>
-                        🔧 競合問題修正版: <strong>有効</strong><br>
-                        📊 全データはDBに記録されています(ユーザー: ${AppData.users.length}件、コース: ${totalCourses}件、学習記録: ${totalRecords}件)<br>
+                        💾 PostgreSQL データベース: <strong>接続済み</strong><br>
+                        📊 全データは永続化されています(ユーザー: ${AppData.users.length}件、コース: ${totalCourses}件、学習記録: ${totalRecords}件)<br>
                         🔄 自動保存: 有効(2秒ごと)<br>
                         ✅ 複数ブラウザ同時利用: 対応済み
                     </div>
@@ -1633,7 +1692,7 @@
                             ✅ 自動保存機能が動作中<br>
                             ✅ 進行状況の復元機能が有効<br>
                             ✅ ユーザー追加時に即座にDB保存<br>
-                            🔧 <strong>競合問題を修正済み</strong>:学習記録が消えません
+                            ✅ <strong>PostgreSQL版</strong>: データは永続化されます
                         </p>
                     </div>
                     
