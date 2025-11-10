@@ -173,33 +173,56 @@ async function deleteUser(id) {
 // 全コース取得
 async function getCourses() {
     const result = await pool.query('SELECT * FROM courses ORDER BY id');
-    return result.rows;
+    // slidesをslideImagesにマッピング
+    return result.rows.map(course => ({
+        ...course,
+        slideImages: course.slides || []
+    }));
 }
 
 // コース取得（ID）
 async function getCourseById(id) {
     const result = await pool.query('SELECT * FROM courses WHERE id = $1', [id]);
-    return result.rows[0];
+    if (result.rows[0]) {
+        // slidesをslideImagesにマッピング
+        return {
+            ...result.rows[0],
+            slideImages: result.rows[0].slides || []
+        };
+    }
+    return null;
 }
 
 // コース作成
 async function createCourse(courseData) {
-    const { title, description, slides = [], quiz = [], passing_score = 70 } = courseData;
+    const { title, description, slideImages, slides, quiz = [], passing_score = 70 } = courseData;
+    // slideImagesまたはslidesのどちらかを使用
+    const slidesData = slideImages || slides || [];
     const result = await pool.query(
         'INSERT INTO courses (title, description, slides, quiz, passing_score) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-        [title, description, JSON.stringify(slides), JSON.stringify(quiz), passing_score]
+        [title, description, JSON.stringify(slidesData), JSON.stringify(quiz), passing_score]
     );
-    return result.rows[0];
+    // 返す際はslideImagesフィールドも含める
+    return {
+        ...result.rows[0],
+        slideImages: result.rows[0].slides || []
+    };
 }
 
 // コース更新
 async function updateCourse(id, courseData) {
-    const { title, description, slides, quiz, passing_score } = courseData;
+    const { title, description, slideImages, slides, quiz, passing_score } = courseData;
+    // slideImagesまたはslidesのどちらかを使用
+    const slidesData = slideImages || slides || [];
     const result = await pool.query(
         'UPDATE courses SET title = $1, description = $2, slides = $3, quiz = $4, passing_score = $5, updated_at = CURRENT_TIMESTAMP WHERE id = $6 RETURNING *',
-        [title, description, JSON.stringify(slides), JSON.stringify(quiz), passing_score, id]
+        [title, description, JSON.stringify(slidesData), JSON.stringify(quiz), passing_score, id]
     );
-    return result.rows[0];
+    // 返す際はslideImagesフィールドも含める
+    return {
+        ...result.rows[0],
+        slideImages: result.rows[0].slides || []
+    };
 }
 
 // コース削除

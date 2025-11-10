@@ -9,8 +9,8 @@ const PORT = process.env.PORT || 3000;
 
 // ミドルウェア
 app.use(cors());
-app.use(bodyParser.json({ limit: '50mb' }));
-app.use(bodyParser.urlencoded({ extended: true, limit: '50mb' }));
+app.use(bodyParser.json({ limit: '100mb' })); // 制限を増やす
+app.use(bodyParser.urlencoded({ extended: true, limit: '100mb' }));
 app.use(express.static('public'));
 
 // API エンドポイント
@@ -265,6 +265,13 @@ app.get('/api/courses/:id', async (req, res) => {
     try {
         const course = await db.getCourseById(parseInt(req.params.id));
         if (course) {
+            console.log('📖 コース取得:', {
+                id: course.id,
+                title: course.title,
+                slideImagesCount: course.slideImages ? course.slideImages.length : 0,
+                firstImageSize: course.slideImages && course.slideImages[0] ? 
+                    course.slideImages[0].data?.substring(0, 50) : 'なし'
+            });
             res.json(course);
         } else {
             res.status(404).json({ error: 'コースが見つかりません' });
@@ -278,11 +285,19 @@ app.get('/api/courses/:id', async (req, res) => {
 // コース作成
 app.post('/api/courses', async (req, res) => {
     try {
+        console.log('📝 コース作成リクエスト:', {
+            title: req.body.title,
+            slideImagesCount: req.body.slideImages ? req.body.slideImages.length : 0,
+            slidesCount: req.body.slides ? req.body.slides.length : 0,
+            firstImagePreview: req.body.slideImages && req.body.slideImages[0] ? 
+                req.body.slideImages[0].data?.substring(0, 50) + '...' : 'なし'
+        });
         const course = await db.createCourse(req.body);
+        console.log('✅ コース作成成功:', course.id);
         res.json({ success: true, course });
     } catch (error) {
         console.error('コース作成エラー:', error);
-        res.status(500).json({ success: false, error: 'コースの作成に失敗しました' });
+        res.status(500).json({ success: false, error: 'コースの作成に失敗しました', details: error.message });
     }
 });
 
