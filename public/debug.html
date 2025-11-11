@@ -172,7 +172,8 @@
         let diagnosisData = null;
 
         async function diagnose() {
-            const btn = event.target;
+            // ボタンを直接取得（event.targetではなく）
+            const btn = document.querySelector('button[onclick="diagnose()"]');
             const loading = document.getElementById('diagnosisLoading');
             const result = document.getElementById('diagnosisResult');
             const statsDiv = document.getElementById('stats');
