@@ -913,32 +913,14 @@
             async saveProgress(userId) {
                 try {
                     const progress = {
-                        course_id: AppData.currentCourse ? AppData.currentCourse.id : null,
-                        current_slide: AppData.learningState.slideIndex,
-                        quiz_started: AppData.learningState.screen === 'quiz',
-                        quiz_answers: AppData.learningState.answers || {},
-                        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                        ...AppData.learningState,
+                        userId: userId,
+                        courseId: AppData.currentCourse ? AppData.currentCourse.id : null,
+                        lastUpdated: new Date().toISOString()
                     };
-                    
-                    const response = await fetch(`${this.API_BASE}/progress/${userId}`, {
+                    const response = await fetch(`${this.API_BASE}/api/progress/${userId}`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(progress)
-                    });
-                    
-                    if (response.ok) {
-                        console.log('💾 進捗を保存しました');
-                        return true;
-                    }
-                    
-                    return false;
-                } catch (error) {
-                    console.error('❌ 進捗保存エラー:', error);
-                    return false;
-                }
-            },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(progress)
                     });
                     const result = await response.json();
@@ -955,51 +937,34 @@
             
             async loadProgress(userId) {
                 try {
-                    const courseId = AppData.currentCourse ? AppData.currentCourse.id : null;
-                    if (!courseId) return null;
-                    
-                    const response = await fetch(`${this.API_BASE}/progress/${userId}?courseId=${courseId}`);
-                    
+                    const response = await fetch(`${this.API_BASE}/api/progress/${userId}`);
                     if (response.ok) {
                         const progress = await response.json();
-                        console.log('✅ 進捗をロードしました:', progress);
-                        
+                        const hoursSince = (Date.now() - new Date(progress.lastUpdated)) / (1000 * 60 * 60);
+                        if (hoursSince > 24) {
+                            await this.clearProgress(userId);
+                            return null;
+                        }
+                        // ✅ courseIdを追加
                         return {
-                            courseId: progress.course_id,
-                            slideIndex: progress.current_slide || 0,
-                            screen: progress.quiz_started ? 'quiz' : 'training',
-                            answers: progress.quiz_answers || {},
-                            showExplanations: {},
-                            userName: progress.user_name,
-                            userDept: progress.user_dept,
-                            questionIndex: progress.question_index || 0
+                            ...progress,
+                            courseId: progress.courseId || (AppData.courses.length > 0 ? AppData.courses[0].id : null)
                         };
                     }
-                    
                     return null;
                 } catch (error) {
-                    console.error('❌ 進捗ロードエラー:', error);
                     return null;
                 }
             },
             
             async clearProgress(userId) {
                 try {
-                    const courseId = AppData.currentCourse ? AppData.currentCourse.id : null;
-                    if (!courseId) return true;
-                    
-                    const response = await fetch(`${this.API_BASE}/progress/${userId}?courseId=${courseId}`, {
+                    const response = await fetch(`${this.API_BASE}/api/progress/${userId}`, {
                         method: 'DELETE'
                     });
-                    
-                    if (response.ok) {
-                        console.log('🗑️ 進捗をクリアしました');
-                        return true;
-                    }
-                    
-                    return false;
+                    const result = await response.json();
+                    return result.success || false;
                 } catch (error) {
-                    console.error('❌ 進捗クリアエラー:', error);
                     return false;
                 }
             },
