@@ -857,7 +857,7 @@
             return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
         });
 
-                // データベース管理(API使用)
+        // データベース管理(API使用)
         const Database = {
             API_BASE: window.location.origin,
             
@@ -936,19 +936,6 @@
                     return false;
                 } catch (error) {
                     console.error('❌ 進捗保存エラー:', error);
-                    return false;
-                }
-            },
-                        body: JSON.stringify(progress)
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        console.log('💾 進行状況を保存');
-                        return true;
-                    }
-                    return false;
-                } catch (error) {
-                    console.error('❌ 進行状況保存エラー:', error);
                     return false;
                 }
             },
