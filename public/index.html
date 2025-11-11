@@ -1283,6 +1283,13 @@
                     console.error('❌ データクリアエラー:', error);
                     return false;
                 }
+            },
+            
+            async loadAllProgress() {
+                // PostgreSQL版では個別に進捗を取得するため、この関数は不要
+                // 互換性のために空の関数として残す
+                console.log('ℹ️ PostgreSQL版では進捗は個別にロードされます');
+                return true;
             }
         };
         // アプリケーションデータ - 全てDBから読み込む
