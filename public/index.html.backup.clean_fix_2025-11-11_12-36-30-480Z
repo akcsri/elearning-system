@@ -945,11 +945,7 @@
                             await this.clearProgress(userId);
                             return null;
                         }
-                        // ✅ courseIdを追加
-                        return {
-                            ...progress,
-                            courseId: progress.courseId || (AppData.courses.length > 0 ? AppData.courses[0].id : null)
-                        };
+                        return progress;
                     }
                     return null;
                 } catch (error) {
