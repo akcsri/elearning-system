@@ -375,6 +375,107 @@ setInterval(async () => {
     }
 }, 60 * 60 * 1000);
 
+// ========================================
+// 以下のコードをserver-postgres.jsに追加してください
+// app.listen()の直前に追加するのが適切です
+// ========================================
+
+// データベース診断エンドポイント
+app.get('/api/debug/database', async (req, res) => {
+    try {
+        const usersCount = await db.pool.query('SELECT COUNT(*) as count FROM users');
+        const coursesCount = await db.pool.query('SELECT COUNT(*) as count FROM courses');
+        const recordsCount = await db.pool.query('SELECT COUNT(*) as count FROM learning_records');
+        const passedCount = await db.pool.query('SELECT COUNT(*) as count FROM learning_records WHERE passed = true');
+        
+        // 重複チェック
+        const duplicates = await db.pool.query(`
+            SELECT 
+                user_id, 
+                course_id, 
+                COUNT(*) as count
+            FROM learning_records
+            GROUP BY user_id, course_id
+            HAVING COUNT(*) > 1
+        `);
+
+        res.json({
+            success: true,
+            stats: {
+                users: usersCount.rows[0].count,
+                courses: coursesCount.rows[0].count,
+                totalRecords: recordsCount.rows[0].count,
+                passedRecords: passedCount.rows[0].count,
+                duplicates: duplicates.rows.length
+            },
+            duplicateDetails: duplicates.rows
+        });
+    } catch (error) {
+        console.error('診断エラー:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// 重複データ削除エンドポイント
+app.post('/api/debug/cleanup-duplicates', async (req, res) => {
+    const client = await db.pool.connect();
+    
+    try {
+        await client.query('BEGIN');
+        
+        // 重複を見つける
+        const duplicates = await client.query(`
+            SELECT 
+                user_id, 
+                course_id, 
+                array_agg(id ORDER BY completed_at DESC) as record_ids
+            FROM learning_records
+            GROUP BY user_id, course_id
+            HAVING COUNT(*) > 1
+        `);
+
+        let deletedCount = 0;
+        const details = [];
+
+        for (const dup of duplicates.rows) {
+            const idsToKeep = [dup.record_ids[0]];
+            const idsToDelete = dup.record_ids.slice(1);
+
+            details.push({
+                user_id: dup.user_id,
+                course_id: dup.course_id,
+                kept: idsToKeep[0],
+                deleted: idsToDelete
+            });
+
+            await client.query(
+                'DELETE FROM learning_records WHERE id = ANY($1)',
+                [idsToDelete]
+            );
+
+            deletedCount += idsToDelete.length;
+        }
+
+        await client.query('COMMIT');
+        
+        // 最終状態を確認
+        const finalCount = await client.query('SELECT COUNT(*) as count FROM learning_records');
+
+        res.json({
+            success: true,
+            deletedCount,
+            remainingRecords: finalCount.rows[0].count,
+            details
+        });
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('クリーンアップエラー:', error);
+        res.status(500).json({ success: false, error: error.message });
+    } finally {
+        client.release();
+    }
+});
+
 // サーバー起動
 async function startServer() {
     try {
