@@ -31,62 +31,15 @@ app.get('/api/data', async (req, res) => {
     }
 });
 
-// データ保存（既存のJSON形式互換）
+// データ保存（全データ） - 無効化
 app.post('/api/data', async (req, res) => {
-    try {
-        const data = req.body;
-        
-        // ユーザーの更新
-        if (data.users) {
-            for (const user of data.users) {
-                if (user.id) {
-                    const existing = await db.getUserById(user.id);
-                    if (existing) {
-                        await db.updateUser(user.id, user);
-                    } else {
-                        await db.createUser(user);
-                    }
-                } else {
-                    await db.createUser(user);
-                }
-            }
-        }
-        
-        // コースの更新
-        if (data.courses) {
-            for (const course of data.courses) {
-                if (course.id) {
-                    const existing = await db.getCourseById(course.id);
-                    if (existing) {
-                        await db.updateCourse(course.id, course);
-                    } else {
-                        await db.createCourse(course);
-                    }
-                } else {
-                    await db.createCourse(course);
-                }
-            }
-        }
-        
-        // 学習記録の保存
-        if (data.learningRecords) {
-            for (const record of data.learningRecords) {
-                await db.createLearningRecord({
-                    user_id: record.userId || record.user_id,
-                    course_id: record.courseId || record.course_id,
-                    score: record.score,
-                    passed: record.passed,
-                    answers: record.answers || [],
-                    time_spent: record.timeSpent || record.time_spent || 0
-                });
-            }
-        }
-        
-        res.json({ success: true, message: 'データを保存しました' });
-    } catch (error) {
-        console.error('データ保存エラー:', error);
-        res.status(500).json({ success: false, error: 'データの保存に失敗しました' });
-    }
+    // このエンドポイントは使用しない
+    // 学習記録は /api/learning-records で個別管理
+    console.log('⚠️  /api/data への保存リクエストを無視しました');
+    res.json({ 
+        success: true, 
+        message: 'このエンドポイントは無効化されています。学習記録は個別APIで管理されます。' 
+    });
 });
 
 // 進捗取得
@@ -470,6 +423,99 @@ app.post('/api/debug/cleanup-duplicates', async (req, res) => {
     } catch (error) {
         await client.query('ROLLBACK');
         console.error('クリーンアップエラー:', error);
+        res.status(500).json({ success: false, error: error.message });
+    } finally {
+        client.release();
+    }
+});
+
+// ========================================
+// 緊急対応: データベースクリーンアップAPI
+// ========================================
+
+// 学習記録を完全削除（管理者用）
+app.post('/api/debug/reset-learning-records', async (req, res) => {
+    const client = await db.pool.connect();
+    
+    try {
+        console.log('🚨 学習記録の完全リセットを実行中...');
+        
+        await client.query('BEGIN');
+        
+        const beforeCount = await client.query('SELECT COUNT(*) as count FROM learning_records');
+        console.log('  削除前の記録数:', beforeCount.rows[0].count);
+        
+        await client.query('TRUNCATE TABLE learning_records RESTART IDENTITY');
+        
+        await client.query('COMMIT');
+        
+        console.log('✅ 学習記録を完全削除しました');
+        
+        res.json({
+            success: true,
+            deletedCount: parseInt(beforeCount.rows[0].count),
+            message: '学習記録を完全にリセットしました'
+        });
+        
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('❌ リセットエラー:', error);
+        res.status(500).json({ success: false, error: error.message });
+    } finally {
+        client.release();
+    }
+});
+
+// ユーザーごとに最新の記録のみを保持
+app.post('/api/debug/keep-latest-only', async (req, res) => {
+    const client = await db.pool.connect();
+    
+    try {
+        console.log('🧹 ユーザーごとに最新の記録のみを保持...');
+        
+        await client.query('BEGIN');
+        
+        const beforeCount = await client.query('SELECT COUNT(*) as count FROM learning_records');
+        console.log('  処理前の記録数:', beforeCount.rows[0].count);
+        
+        const latestRecords = await client.query(`
+            SELECT DISTINCT ON (user_id, course_id) id
+            FROM learning_records
+            ORDER BY user_id, course_id, completed_at DESC
+        `);
+        
+        const idsToKeep = latestRecords.rows.map(r => r.id);
+        console.log('  保持するID:', idsToKeep);
+        
+        if (idsToKeep.length > 0) {
+            await client.query(
+                'DELETE FROM learning_records WHERE id NOT IN (' + 
+                idsToKeep.map((_, i) => `$${i + 1}`).join(',') + ')',
+                idsToKeep
+            );
+        } else {
+            await client.query('TRUNCATE TABLE learning_records RESTART IDENTITY');
+        }
+        
+        await client.query('COMMIT');
+        
+        const afterCount = await client.query('SELECT COUNT(*) as count FROM learning_records');
+        const deletedCount = parseInt(beforeCount.rows[0].count) - parseInt(afterCount.rows[0].count);
+        
+        console.log('  処理後の記録数:', afterCount.rows[0].count);
+        console.log('  削除した記録数:', deletedCount);
+        
+        res.json({
+            success: true,
+            before: parseInt(beforeCount.rows[0].count),
+            after: parseInt(afterCount.rows[0].count),
+            deleted: deletedCount,
+            keptIds: idsToKeep
+        });
+        
+    } catch (error) {
+        await client.query('ROLLBACK');
+        console.error('❌ クリーンアップエラー:', error);
         res.status(500).json({ success: false, error: error.message });
     } finally {
         client.release();
