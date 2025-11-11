@@ -1470,15 +1470,10 @@
                                     ${learners.map(learner => {
                                         const records = AppData.learningRecords.filter(r => r.userId === learner.id);
                                         const latestRecord = records.length > 0 ? records[records.length - 1] : null;
-                                        const progress = Database.loadProgress(learner.id);
                                         
                                         let statusBadge = '<span style="background: #e5e7eb; color: #6b7280; padding: 4px 12px; border-radius: 12px; font-size: 12px;">未開始</span>';
                                         let testResult = '-';
                                         let certificate = '-';
-                                        
-                                        if (progress && !latestRecord) {
-                                            statusBadge = '<span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 12px; font-size: 12px;">⏸️ 中断中</span>';
-                                        }
                                         
                                         if (latestRecord) {
                                             if (latestRecord.status === 'completed') {
