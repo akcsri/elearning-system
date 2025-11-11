@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>データベース診断・修復ツール</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #1e3c72;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1e3c72;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+            margin: 5px 0;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .result.success {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+        .result.error {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        pre {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 データベース診断・修復ツール</h1>
+        
+        <!-- 診断セクション -->
+        <div class="section">
+            <h2>📊 ステップ1: データベース診断</h2>
+            <p>現在のデータベースの状態を確認します</p>
+            <button class="btn-primary" onclick="diagnose()">診断を実行</button>
+            
+            <div id="diagnosisLoading" class="loading">
+                <div class="spinner"></div>
+                <p>診断中...</p>
+            </div>
+            
+            <div id="diagnosisResult" class="result"></div>
+            
+            <div id="stats" class="stats" style="display: none;"></div>
+        </div>
+        
+        <!-- 修復セクション -->
+        <div class="section">
+            <h2>🧹 ステップ2: 重複データの削除</h2>
+            <p style="color: #ef4444; font-weight: 600;">⚠️ この操作は元に戻せません。必ず診断を実行してから行ってください。</p>
+            <button class="btn-danger" onclick="cleanup()" id="cleanupBtn" disabled>重複データを削除</button>
+            
+            <div id="cleanupLoading" class="loading">
+                <div class="spinner"></div>
+                <p>削除中...</p>
+            </div>
+            
+            <div id="cleanupResult" class="result"></div>
+        </div>
+        
+        <!-- 詳細情報 -->
+        <div class="section" id="detailsSection" style="display: none;">
+            <h2>📋 詳細情報</h2>
+            <pre id="details"></pre>
+        </div>
+    </div>
+
+    <script>
+        let diagnosisData = null;
+
+        async function diagnose() {
+            const btn = event.target;
+            const loading = document.getElementById('diagnosisLoading');
+            const result = document.getElementById('diagnosisResult');
+            const statsDiv = document.getElementById('stats');
+            const cleanupBtn = document.getElementById('cleanupBtn');
+            
+            btn.disabled = true;
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            statsDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/debug/database');
+                const data = await response.json();
+                diagnosisData = data;
+                
+                if (data.success) {
+                    // 統計表示
+                    statsDiv.innerHTML = `
+                        <div class="stat-box">
+                            <div class="stat-value">${data.stats.users}</div>
+                            <div class="stat-label">ユーザー数</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">${data.stats.courses}</div>
+                            <div class="stat-label">コース数</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">${data.stats.totalRecords}</div>
+                            <div class="stat-label">学習記録数</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value">${data.stats.passedRecords}</div>
+                            <div class="stat-label">修了者数</div>
+                        </div>
+                        <div class="stat-box" style="background: ${data.stats.duplicates > 0 ? '#fee2e2' : '#d1fae5'};">
+                            <div class="stat-value" style="color: ${data.stats.duplicates > 0 ? '#ef4444' : '#10b981'};">${data.stats.duplicates}</div>
+                            <div class="stat-label">重複グループ</div>
+                        </div>
+                    `;
+                    statsDiv.style.display = 'grid';
+                    
+                    result.className = 'result success';
+                    result.style.display = 'block';
+                    result.innerHTML = `
+                        <strong>✅ 診断完了</strong><br>
+                        ${data.stats.duplicates > 0 
+                            ? `⚠️ ${data.stats.duplicates}組の重複が見つかりました。削除することをお勧めします。`
+                            : '✅ 重複データはありません。'}
+                    `;
+                    
+                    // 重複がある場合のみ削除ボタンを有効化
+                    if (data.stats.duplicates > 0) {
+                        cleanupBtn.disabled = false;
+                    }
+                    
+                    // 詳細表示
+                    if (data.duplicateDetails.length > 0) {
+                        document.getElementById('detailsSection').style.display = 'block';
+                        document.getElementById('details').textContent = JSON.stringify(data.duplicateDetails, null, 2);
+                    }
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.style.display = 'block';
+                result.innerHTML = `<strong>❌ エラー</strong><br>${error.message}`;
+            } finally {
+                loading.style.display = 'none';
+                btn.disabled = false;
+            }
+        }
+
+        async function cleanup() {
+            if (!confirm('本当に重複データを削除しますか？この操作は元に戻せません。')) {
+                return;
+            }
+            
+            const btn = document.getElementById('cleanupBtn');
+            const loading = document.getElementById('cleanupLoading');
+            const result = document.getElementById('cleanupResult');
+            
+            btn.disabled = true;
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/debug/cleanup-duplicates', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    result.className = 'result success';
+                    result.style.display = 'block';
+                    result.innerHTML = `
+                        <strong>✅ 削除完了</strong><br>
+                        削除した記録: ${data.deletedCount}件<br>
+                        残った記録: ${data.remainingRecords}件<br><br>
+                        <strong>次のステップ:</strong><br>
+                        1. ブラウザを完全リロード (Ctrl+Shift+R)<br>
+                        2. 管理画面で数値を確認
+                    `;
+                    
+                    // 詳細表示
+                    if (data.details.length > 0) {
+                        document.getElementById('detailsSection').style.display = 'block';
+                        document.getElementById('details').textContent = JSON.stringify(data.details, null, 2);
+                    }
+                    
+                    // 再診断を促す
+                    setTimeout(() => {
+                        if (confirm('削除が完了しました。再度診断を実行しますか?')) {
+                            diagnose();
+                        }
+                    }, 2000);
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                result.className = 'result error';
+                result.style.display = 'block';
+                result.innerHTML = `<strong>❌ エラー</strong><br>${error.message}`;
+            } finally {
+                loading.style.display = 'none';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
