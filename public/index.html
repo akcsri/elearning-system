@@ -1408,13 +1408,9 @@
                 // 全ユーザーの進捗データをロード
                 await Database.loadAllProgress();
                 
-                // 定期的にDBに自動保存（2秒ごと）- ただし学習記録は除外
-                setInterval(() => {
-                    if (AppData.users.length > 0 || AppData.courses.length > 0) {
-                        Database.save();
-                    }
-                }, 2000);
-                
+                // PostgreSQL版では個別APIで保存するため、定期保存は不要
+                // 進捗データのみ30秒ごとに保存
+
                 // 進行状況の定期保存(30秒ごと)
                 setInterval(() => {
                     if (AppData.currentUser && 
@@ -2666,18 +2662,41 @@
                     slideImages: PPTXAnalyzer.extractedImages
                 };
 
-                AppData.courses.push(newCourse);
-                AppData.currentCourse = newCourse;
-                
-                // 即座にDBに保存
-                await Database.save();
-                
-                alert('✅ コースをDBに保存しました!' + 
-                      (PPTXAnalyzer.extractedImages.length > 0 ? 
-                       `\n${PPTXAnalyzer.extractedImages.length}枚の画像をインポートしました。` : 
-                       '\n※ デモ用スライドが使用されます。'));
-                
-                this.switchTab('courses');
+                // PostgreSQL APIでコースを保存
+                try {
+                    const response = await fetch('/api/courses', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            title: newCourse.title,
+                            description: newCourse.subtitle || '',
+                            slideImages: newCourse.slideImages,
+                            quiz: EXTRACTED_QUESTIONS,
+                            passing_score: 70
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        newCourse.id = data.course.id;
+                        AppData.courses.push(newCourse);
+                        AppData.currentCourse = newCourse;
+                        
+                        alert('✅ コースをDBに保存しました!' + 
+                              (PPTXAnalyzer.extractedImages.length > 0 ? 
+                               `\n${PPTXAnalyzer.extractedImages.length}枚の画像をインポートしました。` : 
+                               '\n※ デモ用スライドが使用されます。'));
+                        
+                        this.switchTab('courses');
+                    } else {
+                        alert('❌ コースの保存に失敗しました');
+                    }
+                } catch (error) {
+                    console.error('❌ コース保存エラー:', error);
+                    alert('❌ コースの保存に失敗しました');
+                }
             },
 
             cancelImport() {
@@ -2688,9 +2707,22 @@
 
             async deleteCourse(id) {
                 if (confirm('このコースを削除しますか?')) {
-                    AppData.courses = AppData.courses.filter(c => c.id !== id);
-                    await Database.save();
-                    this.render();
+                    try {
+                        const response = await fetch(`/api/courses/${id}`, {
+                            method: 'DELETE'
+                        });
+                        
+                        if (response.ok) {
+                            AppData.courses = AppData.courses.filter(c => c.id !== id);
+                            alert('✅ コースを削除しました');
+                            this.render();
+                        } else {
+                            alert('❌ コースの削除に失敗しました');
+                        }
+                    } catch (error) {
+                        console.error('❌ コース削除エラー:', error);
+                        alert('❌ コースの削除に失敗しました');
+                    }
                 }
             },
 
@@ -2980,10 +3012,7 @@
                     return;
                 }
                 
-                const maxId = Math.max(...AppData.users.map(u => u.id), 0);
-                
                 const newLearner = {
-                    id: maxId + 1,
                     username: username,
                     password: password,
                     name: name,
@@ -2992,15 +3021,32 @@
                     department: dept
                 };
                 
-                AppData.users.push(newLearner);
-                
-                // 即座にDBに保存
-                await Database.save();
-                
-                document.querySelector('.modal').remove();
-                alert(`✅ 受講者をDBに追加しました!\n\n氏名: ${name}\nユーザー名: ${username}`);
-                
-                this.render();
+                // PostgreSQL APIでユーザーを追加
+                try {
+                    const response = await fetch('/api/users', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(newLearner)
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        newLearner.id = data.user.id;
+                        AppData.users.push(newLearner);
+                        
+                        document.querySelector('.modal').remove();
+                        alert(`✅ 受講者をDBに追加しました!\n\n氏名: ${name}\nユーザー名: ${username}`);
+                        
+                        this.render();
+                    } else {
+                        errorDiv.innerHTML = '<div class="error-message">ユーザーの追加に失敗しました</div>';
+                    }
+                } catch (error) {
+                    console.error('❌ ユーザー追加エラー:', error);
+                    errorDiv.innerHTML = '<div class="error-message">ユーザーの追加に失敗しました</div>';
+                }
             },
 
             viewLearnerDetail(userId) {
@@ -3118,11 +3164,8 @@
             },
 
             async saveDatabase() {
-                if (await Database.save()) {
-                    alert('✅ データをDBに保存しました!\n\nユーザー: ' + AppData.users.length + '件\nコース: ' + AppData.courses.length + '件\n受講記録: ' + AppData.learningRecords.length + '件');
-                } else {
-                    alert('❌ データの保存に失敗しました');
-                }
+                // PostgreSQL版では自動的に保存されるため、確認メッセージのみ表示
+                alert('✅ PostgreSQL版ではデータは自動的に保存されています!\n\nユーザー: ' + AppData.users.length + '件\nコース: ' + AppData.courses.length + '件\n受講記録: ' + AppData.learningRecords.length + '件');
             },
 
             async exportDatabase() {
