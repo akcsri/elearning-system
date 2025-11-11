@@ -2358,7 +2358,7 @@
                                     '画像数:', course.slideImages ? course.slideImages.length : 0,
                                     '現在のスライド:', AppData.learningState.slideIndex + 1);
                         } else {
-                            console.warn('⚠️ 警告: 進行状況のコースID', savedCourseId, 
+                            console.warn('⚠️ 警告: 進行状況のコースID', AppData.savedProgress.courseId, 
                                         'が見つかりません');
                             if (AppData.courses.length > 0) {
                                 AppData.currentCourse = AppData.courses[0];
@@ -2373,18 +2373,12 @@
                         }
                     }
                     
-                    // ✅ 最後の安全チェック：それでもコースがなければエラーにする
-        if (!AppData.currentCourse) {
-            alert('エラー: コースが見つかりません。管理者に連絡してください。');
-            console.error('❌ エラー: 再開時にコースが見つかりません');
-            return;
-        }
-        
-        AppData.savedProgress = null;
-        this.render();
-    },
+                    AppData.savedProgress = null;
+                    this.render();
+                }
+            },
 
-    async startFromBeginning() {
+            async startFromBeginning() {
                 if (confirm('前回の進行状況を削除して、最初から開始しますか?')) {
                     if (AppData.currentUser) {
                         await Database.clearProgress(AppData.currentUser.id);
