@@ -1373,7 +1373,7 @@
                 const totalUsers = AppData.users.filter(u => u.role === 'user').length;
                 const totalCourses = AppData.courses.length;
                 const totalRecords = AppData.learningRecords.length;
-                const completedRecords = AppData.learningRecords.filter(r => r.passed).length;
+                const completedRecords = AppData.learningRecords.filter(r => r.status === 'completed' && r.passed).length;
                 
                 return `
                     <div class="section-header">
