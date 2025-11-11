@@ -1996,7 +1996,7 @@
 
             attachLearningListeners() {},
 
-            login() {
+            async login() {
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
 
@@ -2006,7 +2006,7 @@
 
                 if (user) {
                     AppData.currentUser = user;
-                    const progress = Database.loadProgress(user.id);
+                    const progress = await Database.loadProgress(user.id);
                     if (progress) {
                         AppData.savedProgress = progress;
                     }
@@ -2027,12 +2027,12 @@
                 }
             },
 
-            logout() {
+            async logout() {
                 if (confirm('ログアウトしますか?')) {
                     if (AppData.currentUser && 
                         (AppData.learningState.screen === 'training' || 
                          AppData.learningState.screen === 'quiz')) {
-                        Database.saveProgress(AppData.currentUser.id);
+                        await Database.saveProgress(AppData.currentUser.id);
                     }
                     
                     AppData.currentUser = null;
@@ -2072,17 +2072,17 @@
                 this.render();
             },
 
-            backToAdmin() {
+            async backToAdmin() {
                 if (AppData.currentUser && 
                     (AppData.learningState.screen === 'training' || 
                      AppData.learningState.screen === 'quiz')) {
-                    Database.saveProgress(AppData.currentUser.id);
+                    await Database.saveProgress(AppData.currentUser.id);
                 }
                 this.currentView = 'admin';
                 this.render();
             },
 
-            startLearning(courseId) {
+            async startLearning(courseId) {
                 if (courseId) {
                     const course = AppData.courses.find(c => c.id === courseId);
                     if (course) {
@@ -2093,7 +2093,7 @@
                 }
                 
                 if (AppData.currentUser) {
-                    const progress = Database.loadProgress(AppData.currentUser.id);
+                    const progress = await Database.loadProgress(AppData.currentUser.id);
                     if (progress) {
                         AppData.savedProgress = progress;
                     }
@@ -2124,10 +2124,10 @@
                 }
             },
 
-            startFromBeginning() {
+            async startFromBeginning() {
                 if (confirm('前回の進行状況を削除して、最初から開始しますか?')) {
                     if (AppData.currentUser) {
-                        Database.clearProgress(AppData.currentUser.id);
+                        await Database.clearProgress(AppData.currentUser.id);
                     }
                     AppData.savedProgress = null;
                     
@@ -2426,7 +2426,7 @@
                 }
             },
 
-            startTraining() {
+            async startTraining() {
                 const userName = document.getElementById('userName').value;
                 const userDept = document.getElementById('userDept').value;
 
@@ -2446,7 +2446,7 @@
                 AppData.learningState.slideIndex = 0;
                 
                 if (AppData.currentUser) {
-                    Database.saveProgress(AppData.currentUser.id);
+                    await Database.saveProgress(AppData.currentUser.id);
                 }
                 
                 this.render();
@@ -2497,7 +2497,7 @@
                 this.render();
             },
 
-            finishQuiz() {
+            async finishQuiz() {
                 AppData.learningState.screen = 'result';
                 
                 const totalQuestions = EXTRACTED_QUESTIONS.length;
@@ -2524,18 +2524,18 @@
                 };
                 
                 AppData.learningRecords.push(record);
-                Database.save();
+                await Database.save();
                 
                 if (AppData.currentUser) {
-                    Database.clearProgress(AppData.currentUser.id);
+                    await Database.clearProgress(AppData.currentUser.id);
                 }
                 
                 this.render();
             },
 
-            retakeQuiz() {
+            async retakeQuiz() {
                 if (AppData.currentUser) {
-                    Database.clearProgress(AppData.currentUser.id);
+                    await Database.clearProgress(AppData.currentUser.id);
                 }
                 
                 AppData.learningState = {
