@@ -238,6 +238,59 @@
             background: #eef2ff;
         }
 
+        .option-button.option-correct {
+            border-color: #10b981;
+            background: #d1fae5;
+            color: #065f46;
+            cursor: default;
+        }
+
+        .option-button.option-incorrect {
+            border-color: #ef4444;
+            background: #fee2e2;
+            color: #991b1b;
+            cursor: default;
+        }
+
+        .option-button:disabled {
+            opacity: 0.9;
+            cursor: default;
+        }
+
+        .option-button:disabled:hover {
+            transform: none;
+        }
+
+        .explanation-box {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 5px solid;
+        }
+
+        .explanation-box.correct {
+            background: #d1fae5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+
+        .explanation-box.incorrect {
+            background: #fee2e2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .explanation-box h4 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .explanation-box p {
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
         .login-container {
             max-width: 450px;
             margin: 50px auto;
@@ -1075,15 +1128,55 @@
                 const totalQuestions = quiz.length;
                 const progress = ((AppData.currentQuestionIndex + 1) / totalQuestions) * 100;
 
+                // 既に回答済みかチェック
+                const userAnswer = AppData.userAnswers[AppData.currentQuestionIndex];
+                const isAnswered = userAnswer !== undefined;
+                const isCorrect = isAnswered && userAnswer === question.correctAnswer;
+
                 const optionsHtml = question.options.map((option, index) => {
-                    const isSelected = AppData.userAnswers[AppData.currentQuestionIndex] === index;
+                    const isSelected = userAnswer === index;
+                    const isCorrectAnswer = index === question.correctAnswer;
+                    
+                    let buttonClass = 'option-button';
+                    let icon = '';
+                    
+                    if (isAnswered) {
+                        // 回答済み - 正解・不正解を表示
+                        if (isCorrectAnswer) {
+                            buttonClass += ' option-correct';
+                            icon = '✅ ';
+                        } else if (isSelected && !isCorrect) {
+                            buttonClass += ' option-incorrect';
+                            icon = '❌ ';
+                        } else if (isSelected) {
+                            buttonClass += ' selected';
+                        }
+                    } else {
+                        // 未回答 - 選択可能
+                        if (isSelected) {
+                            buttonClass += ' selected';
+                        }
+                    }
+                    
                     return `
-                        <button class="option-button ${isSelected ? 'selected' : ''}" 
-                                onclick="App.selectAnswer(${index})">
-                            ${String.fromCharCode(65 + index)}. ${option}
+                        <button class="${buttonClass}" 
+                                onclick="App.selectAnswer(${index})"
+                                ${isAnswered ? 'disabled' : ''}>
+                            ${icon}${String.fromCharCode(65 + index)}. ${option}
                         </button>
                     `;
                 }).join('');
+
+                // 解説の表示
+                let explanationHtml = '';
+                if (isAnswered && question.explanation) {
+                    explanationHtml = `
+                        <div class="explanation-box ${isCorrect ? 'correct' : 'incorrect'}">
+                            <h4>${isCorrect ? '✅ 正解!' : '❌ 不正解'}</h4>
+                            <p>${question.explanation}</p>
+                        </div>
+                    `;
+                }
 
                 const html = `
                     <div class="app-container">
@@ -1115,6 +1208,8 @@
                                     ${optionsHtml}
                                 </div>
                                 
+                                ${explanationHtml}
+                                
                                 <div class="navigation">
                                     ${AppData.currentQuestionIndex > 0 ? `
                                         <button class="btn btn-secondary" onclick="App.previousQuestion()">
@@ -1123,12 +1218,12 @@
                                     ` : '<div></div>'}
                                     
                                     ${AppData.currentQuestionIndex < totalQuestions - 1 ? `
-                                        <button class="btn btn-primary" onclick="App.nextQuestion()">
+                                        <button class="btn btn-primary" onclick="App.nextQuestion()" ${!isAnswered ? 'disabled' : ''}>
                                             次の問題 →
                                         </button>
                                     ` : `
-                                        <button class="btn btn-success" onclick="App.submitQuiz()">
-                                            回答を提出
+                                        <button class="btn btn-success" onclick="App.submitQuiz()" ${!isAnswered ? 'disabled' : ''}>
+                                            結果を見る
                                         </button>
                                     `}
                                 </div>
@@ -1141,9 +1236,21 @@
             },
 
             selectAnswer(answerIndex) {
+                // 既に回答済みの場合は変更不可
+                if (AppData.userAnswers[AppData.currentQuestionIndex] !== undefined) {
+                    console.log('⚠️ この問題は既に回答済みです');
+                    return;
+                }
+                
                 console.log('🖱️ 回答を選択:', answerIndex, '問題:', AppData.currentQuestionIndex);
                 AppData.userAnswers[AppData.currentQuestionIndex] = answerIndex;
                 console.log('📝 現在の回答:', AppData.userAnswers);
+                
+                // 正解かどうかチェック
+                const question = AppData.currentCourse.quiz[AppData.currentQuestionIndex];
+                const isCorrect = answerIndex === question.correctAnswer;
+                console.log(isCorrect ? '✅ 正解!' : '❌ 不正解');
+                
                 this.showQuizQuestion();
             },
 
@@ -1167,11 +1274,13 @@
                 const totalQuestions = quiz.length;
                 const answeredCount = Object.keys(AppData.userAnswers).length;
 
+                // すべての問題に回答したか確認
                 if (answeredCount < totalQuestions) {
-                    if (!confirm(`未回答の問題が ${totalQuestions - answeredCount} 問あります。\n\nこのまま提出しますか?`)) {
-                        return;
-                    }
+                    alert(`まだ回答していない問題があります (${answeredCount}/${totalQuestions})`);
+                    return;
                 }
+
+                console.log('📊 テストを採点中...');
 
                 // 採点
                 let correctCount = 0;
@@ -1192,6 +1301,13 @@
                 const passed = score >= passingScore;
                 const timeSpent = Math.floor((Date.now() - AppData.startTime) / 1000);
 
+                console.log('📈 採点結果:', {
+                    score: score,
+                    total: totalQuestions,
+                    passed: passed,
+                    timeSpent: timeSpent
+                });
+
                 // 学習記録を保存
                 const recordData = {
                     user_id: AppData.currentUser.id,
@@ -1205,6 +1321,7 @@
                 const saved = await Database.saveLearningRecord(recordData);
                 
                 if (saved) {
+                    console.log('✅ 学習記録を保存しました');
                     // 進捗を削除
                     await Database.deleteProgress(AppData.currentUser.id, AppData.currentCourse.id);
                     
@@ -1213,6 +1330,8 @@
                     if (data) {
                         AppData.learningRecords = data.learningRecords || [];
                     }
+                } else {
+                    console.error('❌ 学習記録の保存に失敗しました');
                 }
 
                 this.showQuizResult(score, totalQuestions, passed, passingScore);
