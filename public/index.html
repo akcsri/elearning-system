@@ -1232,6 +1232,7 @@
                         AppData.currentUser = user;
                         
                         // 各コースの進捗を確認
+                        let progressFound = false;
                         for (const course of AppData.courses) {
                             AppData.currentCourse = course;
                             const progress = await Database.loadProgress(user.id);
@@ -1247,12 +1248,13 @@
                                     answers: progress.answers || {},
                                     showExplanations: {}
                                 };
+                                progressFound = true;
                                 break; // 最初に見つかった進捗を使用
                             }
                         }
                         
                         // 進捗が見つからない場合は最初のコースを設定
-                        if (!AppData.currentCourse && AppData.courses.length > 0) {
+                        if (!progressFound && AppData.courses.length > 0) {
                             AppData.currentCourse = AppData.courses[0];
                         }
                     }
