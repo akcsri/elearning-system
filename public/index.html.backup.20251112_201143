@@ -1,0 +1,2813 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>インサイダー取引規制 eラーニングシステム - 完全版</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', Meiryo, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 30px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .header-left p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .progress-bar-container {
+            background: rgba(255, 255, 255, 0.2);
+            height: 8px;
+            margin-top: 20px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #4ade80;
+            transition: width 0.3s ease;
+        }
+
+        .content-area {
+            padding: 40px;
+        }
+
+        /* 🔧 スライド表示の大幅改善 */
+        .slide-container {
+            min-height: 500px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .slide-image {
+            width: 100%;
+            max-width: 1200px;
+            height: auto;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            
+        }
+        
+        .slide-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            max-width: 1200px;
+        }
+        
+        .slide-nav-button {
+            flex-shrink: 0;
+            min-width: 120px;
+        }
+
+        /* レスポンシブ対応 */
+        
+        @media (max-width: 992px) {
+            .slide-container {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .slide-nav-button {
+                min-width: 100px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content-area {
+                padding: 20px;
+            }
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-logout {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quiz-question {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .question-number {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .question-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1e3c72;
+            line-height: 1.8;
+            
+        }
+
+        .option {
+            margin-bottom: 15px;
+            padding: 20px;
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .option:hover {
+            background: #f0f4ff;
+            border-color: #667eea;
+        }
+
+        .option.selected {
+            background: #e0e7ff;
+            border-color: #667eea;
+        }
+
+        .option.correct {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+
+        .option.incorrect {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+
+        .explanation-box {
+            background: #ecfdf5;
+            border: 2px solid #10b981;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .explanation-title {
+            color: #059669;
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+
+        .quiz-result {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .score-display {
+            font-size: 72px;
+            font-weight: 700;
+            color: #667eea;
+            margin: 30px 0;
+        }
+
+        .result-message {
+            font-size: 24px;
+            margin: 20px 0;
+        }
+
+        .result-message.pass {
+            color: #10b981;
+        }
+
+        .result-message.fail {
+            color: #ef4444;
+        }
+
+        .certificate-container {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            border: 8px double #d4af37;
+            border-radius: 16px;
+            padding: 50px;
+            margin: 30px auto;
+            max-width: 700px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .certificate-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: white;
+            
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .certificate-body {
+            background: white;
+            padding: 40px;
+            border-radius: 8px;
+            color: #333;
+        }
+
+        .certificate-name {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1e3c72;
+            margin: 30px 0;
+            padding: 15px;
+            border-top: 2px solid #d4af37;
+            border-bottom: 2px solid #d4af37;
+        }
+
+        .start-screen {
+            text-align: center;
+            padding: 60px 40px;
+        }
+
+        .start-screen h2 {
+            font-size: 36px;
+            color: #1e3c72;
+            
+        }
+
+        .course-info {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 30px;
+            margin: 40px 0;
+            text-align: left;
+        }
+
+        .course-info h3 {
+            color: #1e3c72;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .course-info ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .course-info li {
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        /* 管理者機能のスタイル */
+        .nav-tabs {
+            display: flex;
+            border-bottom: 2px solid #e5e7eb;
+            background: #f9fafb;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 20px 30px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s;
+        }
+
+        .nav-tab:hover {
+            color: #667eea;
+        }
+
+        .nav-tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: white;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .section-header h2 {
+            font-size: 24px;
+            color: #1e3c72;
+        }
+
+        .course-card {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .course-structure {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 8px;
+        }
+
+        .structure-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 6px;
+        }
+
+        .section-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+
+        .badge-training {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-test {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-explanation {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            overflow-y: auto;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            margin: 20px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .modal-close:hover {
+            color: #1e3c72;
+        }
+
+        .login-screen {
+            text-align: center;
+            padding: 80px 40px;
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 16px;
+            padding: 50px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .login-box h2 {
+            font-size: 32px;
+            color: #1e3c72;
+            
+        }
+
+        .file-upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .processing-indicator {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .processing-indicator.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .analysis-result {
+            display: none;
+            margin-top: 30px;
+            padding: 25px;
+            background: #f0f4ff;
+            border-radius: 12px;
+        }
+
+        .analysis-result.active {
+            display: block;
+        }
+
+        .analysis-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .question-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .question-item {
+            padding: 10px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        /* 進捗復元通知のスタイル */
+        .resume-banner {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 20px;
+            
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .resume-banner-content {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .resume-banner-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .resume-banner-text {
+            color: #1e40af;
+            font-size: 14px;
+        }
+
+        .resume-banner-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        /* テーブルのレスポンシブ対応 */
+        @media (max-width: 768px) {
+            .nav-tab {
+                padding: 15px 20px;
+                font-size: 14px;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            .btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+
+        .error-message {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script>
+        // 実際のPowerPointから抽出された全10問のデータ
+        const EXTRACTED_QUESTIONS = [
+            {
+                id: 1,
+                number: 1,
+                question: "PEファンドの投資担当者Aさんは、投資先B社の取締役として、他社との合併を検討中であることを知りました。この情報はまだ公表されていません。Aさんが同僚Cさんに「B社株を買うといいかもしれないよ」と伝える行為は、どのように評価されますか。",
+                options: [
+                    "合併が正式決定されていないので違法ではない",
+                    "合併の事実そのものを伝えていないので違法ではない",
+                    "取引推奨行為として違法である",
+                    "Cさんが実際に取引をしなければ違法ではない"
+                ],
+                correctAnswer: 2,
+                explanation: "取引推奨行為は、重要事実を知りながら他者に取引を推奨する行為そのものが規制対象です。相手方が実際に取引したかどうか、重要事実そのものを伝えたかどうかは関係ありません。合併の検討は、たとえ正式決定前でも重要事実に該当しえます。推奨行為自体が違法であり、相手方が取引しなくても成立します。"
+            },
+            {
+                id: 2,
+                number: 2,
+                question: "インサイダー取引規制における「情報伝達・取引推奨行為」の規制対象者として、正しくないものはどれですか。",
+                options: [
+                    "上場会社の従業員",
+                    "契約に基づき重要事実を知った者",
+                    "会社関係者から情報を受け取った第一次情報受領者",
+                    "会社関係者を退職して6ヶ月経過した者"
+                ],
+                correctAnswer: 2,
+                explanation: "情報伝達・取引推奨行為の規制対象は「会社関係者等」です。第一次情報受領者は自らが取引することは禁止されていますが、他者への情報伝達・取引推奨は金商法166条第3項の直接の規制対象ではありません。なお、退職者は退職後1年間(6ヶ月ではない)規制対象となります。"
+            },
+            {
+                id: 3,
+                number: 3,
+                question: "PEファンドの担当者が投資先企業の未公表の決算情報を知った場合、以下のどの行為が許されますか。",
+                options: [
+                    "家族に「この会社の株を買っておいた方がいい」と勧める",
+                    "職務上必要な範囲で、ファンド内の担当者に情報共有する",
+                    "友人に決算数値を伝えて、取引を推奨する",
+                    "SNSで「投資先の業績が好調」と投稿する"
+                ],
+                correctAnswer: 1,
+                explanation: "職務上の正当な理由に基づく情報共有は、Need-to-Know原則に従い、知る必要がある者に限定すれば許容されます。家族・友人への推奨やSNSでの発信は職務上の正当性がなく、明らかな違反です。形式ではなく実質的な意図や目的が重視されます。"
+            },
+            {
+                id: 4,
+                number: 4,
+                question: "取引推奨行為の規制に関する説明として、正しいものはどれですか。",
+                options: [
+                    "相手方が実際に取引をして利益を得た場合にのみ違反となる",
+                    "重要事実そのものを伝えなければ、取引を推奨しても違反とならない",
+                    "推奨行為そのものが違反であり、相手方が取引をしなくても成立する",
+                    "推奨する際に悪意がなければ違反とならない"
+                ],
+                correctAnswer: 2,
+                explanation: "取引推奨行為は、行為そのものが違反となる規制です。相手方が実際に取引したかどうか、利益を得たかどうか、重要事実を明示的に伝えたかどうか、悪意の有無は関係ありません。推奨行為自体が罰せられます。"
+            },
+            {
+                id: 5,
+                number: 5,
+                question: "以下のうち、金商法166条で規定される「重要事実」に該当しないものはどれですか。",
+                options: [
+                    "株式分割の決定",
+                    "第三者割当増資の決定",
+                    "社員食堂のメニュー変更",
+                    "業績予想の大幅な修正"
+                ],
+                correctAnswer: 2,
+                explanation: "重要事実とは、投資者の投資判断に著しい影響を及ぼすべき事実です。株式分割、第三者割当増資、業績予想の修正は典型的な重要事実ですが、社員食堂のメニュー変更は会社の財務状態や経営成績に重要な影響を与えず、投資判断に影響を及ぼしません。"
+            },
+            {
+                id: 6,
+                number: 6,
+                question: "PEファンドの投資担当者が、投資先企業の未公表のM&A情報を知った場合、どのような対応が最も適切ですか。",
+                options: [
+                    "他のファンドメンバーにも広く共有して、意見を求める",
+                    "情報管理規程に従い、知る必要のある者に限定して共有する",
+                    "親しい取引先に投資機会として紹介する",
+                    "まだ決定ではないので、社内外に自由に話しても問題ない"
+                ],
+                correctAnswer: 1,
+                explanation: "未公表のM&A情報は典型的な重要事実です。情報管理規程に従い、職務上知る必要がある者に限定して共有すべきです。広く共有することは情報漏洩リスクを高め、取引先への紹介は職務上の正当性がない違反です。「決定ではない」ことは免責理由になりません。"
+            },
+            {
+                id: 7,
+                number: 7,
+                question: "情報伝達・取引推奨行為の違反に対する罰則として、正しくないものはどれですか。",
+                options: [
+                    "個人に対して5年以下の懲役",
+                    "個人に対して500万円以下の罰金",
+                    "法人に対して5億円以下の罰金",
+                    "個人に対して必ず懲役刑が科される"
+                ],
+                correctAnswer: 3,
+                explanation: "違反に対する刑事罰は「5年以下の懲役もしくは500万円以下の罰金」またはその併科です。「必ず懲役刑」ではなく、罰金刑のみの場合や併科もありえます。刑罰の選択は裁判所が事案の悪質性を考慮して判断します。法人には5億円以下の罰金が科されます。"
+            },
+            {
+                id: 8,
+                number: 8,
+                question: "次のうち、「取引推奨」に該当する可能性が最も低いものはどれですか。",
+                options: [
+                    "「今がA社株の買い時だよ」と友人に伝える",
+                    "「A社は業績が良さそうだから注目している」と言う",
+                    "「A社の株価が上がりそうだから、買ってみたら」と勧める",
+                    "弁護士に法的アドバイスを求めるため、投資先の状況を説明する"
+                ],
+                correctAnswer: 3,
+                explanation: "弁護士への相談のための情報提供は、職務上の正当な理由があり、取引推奨目的がないため違法な行為には該当しません。「買い時」「買ってみたら」は明示的な推奨です。「業績が良さそう」も投資判断に影響を与える意図が認められる可能性があります。"
+            },
+            {
+                id: 9,
+                number: 9,
+                question: "会社関係者が退職した場合、情報伝達・取引推奨行為の規制は、退職後どのくらいの期間適用されますか。",
+                options: [
+                    "退職と同時に規制対象外となる",
+                    "退職後6ヶ月間",
+                    "退職後1年間",
+                    "退職後2年間"
+                ],
+                correctAnswer: 2,
+                explanation: "金商法166条第1項では、会社関係者であった者(退職者)について、退職後1年間は会社関係者として規制対象となることが明記されています。在職中に知った重要事実を退職後すぐに利用することを防止する規定です。"
+            },
+            {
+                id: 10,
+                number: 10,
+                question: "PEファンドの担当者が、投資先企業について重要事実を知っているかどうか不明な場合、どのように対応すべきですか。",
+                options: [
+                    "自分の判断で問題ないと思えば、取引や推奨をしてもよい",
+                    "少額の取引であれば問題ない",
+                    "コンプライアンス部門に相談して確認する",
+                    "重要事実を知らないと宣言すれば問題ない"
+                ],
+                correctAnswer: 2,
+                explanation: "重要事実を知っているかどうか不明な場合、最も適切な対応はコンプライアンス部門に相談することです。重要事実の該当性は法的な判断を要します。自己判断は危険で、金額の多寡も関係ありません。「疑わしきは相談」が原則です。"
+            }
+        ];
+
+        // スライド画像データ - より大きく見やすいSVGに変更
+        function getSlideTitle(slideNum) {
+            const titles = [
+                'はじめに',
+                'インサイダー取引規制とは',
+                '金融商品取引法の基本構造',
+                '第1章 取引規制の概要',
+                '第2章 会社関係者の範囲',
+                '第3章 重要事実の定義',
+                '第4章 情報伝達・取引推奨行為',
+                '第5章 取引推奨行為の意義',
+                '第6章 PEファンドにおける注意点',
+                '第7章 具体的事例',
+                '第8章 違反事例',
+                '第9章 罰則について',
+                '第10章 コンプライアンス体制',
+                '第11章 情報管理の重要性',
+                '第12章 退職後規制',
+                '第13章 相談窓口',
+                '第14章 5つの鉄則',
+                '第15章 まとめ',
+                'テストに進みましょう'
+            ];
+            return titles[slideNum - 1] || '研修内容';
+        }
+        
+        const slideImages = Array.from({length: 19}, (_, i) => {
+            const svg = `<svg width="1200" height="675" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675">
+                <rect width="1200" height="675" fill="#f0f4ff"/>
+                <rect x="50" y="40" width="1100" height="120" fill="#667eea" rx="12"/>
+                <text x="600" y="110" font-family="Arial, sans-serif" font-size="42" fill="white" text-anchor="middle" font-weight="bold">インサイダー取引規制研修</text>
+                <rect x="50" y="200" width="1100" height="420" fill="white" stroke="#e5e7eb" stroke-width="3" rx="12"/>
+                <text x="600" y="300" font-family="Arial, sans-serif" font-size="64" fill="#1e3c72" text-anchor="middle" font-weight="bold">スライド ${i + 1} / 19</text>
+                <text x="600" y="380" font-family="Arial, sans-serif" font-size="28" fill="#6b7280" text-anchor="middle">${getSlideTitle(i + 1)}</text>
+                <text x="600" y="480" font-family="Arial, sans-serif" font-size="20" fill="#9ca3af" text-anchor="middle">※ これはデモ用のスライドです</text>
+                <text x="600" y="520" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af" text-anchor="middle">実際のPowerPointをインポートすることで</text>
+                <text x="600" y="555" font-family="Arial, sans-serif" font-size="18" fill="#9ca3af" text-anchor="middle">本物のスライド画像が表示されます</text>
+            </svg>`;
+            return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+        });
+
+        // データベース管理(API使用)
+        const Database = {
+            API_BASE: window.location.origin,
+            
+            async save() {
+                // 自動保存は無効化
+                // 学習記録は saveLearningRecord() で個別保存される
+                console.log('💾 [自動保存] 無効化されています');
+                return true;
+            },
+            
+            async load() {
+                try {
+                    const response = await fetch(`${this.API_BASE}/api/data`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        AppData.users = data.users || [];
+                        AppData.courses = data.courses || [];
+                        AppData.learningRecords = data.learningRecords || [];
+                        
+                        console.log('✅ データを読み込みました', {
+                            users: AppData.users.length,
+                            courses: AppData.courses.length,
+                            records: AppData.learningRecords.length
+                        });
+                        return true;
+                    }
+                    return false;
+                } catch (error) {
+                    console.error('❌ データ読み込みエラー:', error);
+                    return false;
+                }
+            },
+            
+            async saveProgress(userId) {
+                try {
+                    const progress = {
+                        course_id: AppData.currentCourse ? AppData.currentCourse.id : null,
+                        current_slide: AppData.learningState.slideIndex,
+                        quiz_started: AppData.learningState.screen === 'quiz',
+                        quiz_answers: AppData.learningState.answers || {},
+                        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                    };
+                    
+                    const response = await fetch(`${this.API_BASE}/api/progress/${userId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(progress)
+                    });
+                    
+                    if (response.ok) {
+                        console.log('💾 進捗を保存しました');
+                        return true;
+                    }
+                    
+                    return false;
+                } catch (error) {
+                    console.error('❌ 進捗保存エラー:', error);
+                    return false;
+                }
+            },
+            
+            async loadProgress(userId) {
+                try {
+                    const courseId = AppData.currentCourse ? AppData.currentCourse.id : null;
+                    if (!courseId) return null;
+                    
+                    const response = await fetch(`${this.API_BASE}/api/progress/${userId}?courseId=${courseId}`);
+                    
+                    if (response.ok) {
+                        const progress = await response.json();
+                        console.log('✅ 進捗をロードしました:', progress);
+                        
+                        return {
+                            courseId: progress.course_id,
+                            slideIndex: progress.current_slide || 0,
+                            screen: progress.quiz_started ? 'quiz' : 'training',
+                            answers: progress.quiz_answers || {},
+                            showExplanations: {},
+                            userName: progress.user_name,
+                            userDept: progress.user_dept,
+                            questionIndex: progress.question_index || 0
+                        };
+                    }
+                    
+                    return null;
+                } catch (error) {
+                    console.error('❌ 進捗ロードエラー:', error);
+                    return null;
+                }
+            },
+            
+            async clearProgress(userId) {
+                try {
+                    const courseId = AppData.currentCourse ? AppData.currentCourse.id : null;
+                    if (!courseId) return true;
+                    
+                    const response = await fetch(`${this.API_BASE}/api/progress/${userId}?courseId=${courseId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        console.log('🗑️ 進捗をクリアしました');
+                        return true;
+                    }
+                    
+                    return false;
+                } catch (error) {
+                    console.error('❌ 進捗クリアエラー:', error);
+                    return false;
+                }
+            },
+            
+            async clear() {
+                try {
+                    const response = await fetch(`${this.API_BASE}/api/data`, {
+                        method: 'DELETE'
+                    });
+                    const result = await response.json();
+                    return result.success || false;
+                } catch (error) {
+                    return false;
+                }
+            },
+            
+            async export() {
+                try {
+                    const response = await fetch(`${this.API_BASE}/api/export`);
+                    if (response.ok) {
+                        return await response.text();
+                    }
+                    return null;
+                } catch (error) {
+                    return null;
+                }
+            },
+            
+            async import(jsonString) {
+                try {
+                    const data = JSON.parse(jsonString);
+                    const response = await fetch(`${this.API_BASE}/api/import`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        await this.load();
+                        return true;
+                    }
+                    return false;
+                } catch (error) {
+                    return false;
+                }
+            }
+        };
+
+        const AppData = {
+            currentUser: null,
+            currentCourse: null,
+            analysisResult: null,
+            savedProgress: null,
+            users: [
+                {
+                    id: 1,
+                    username: 'admin',
+                    password: 'admin123',
+                    name: '金子 明彦',
+                    email: 'akihiko.kaneko@csri-japan.com',
+                    role: 'admin',
+                    department: 'オペレーションズ部'
+                },
+                {
+                    id: 2,
+                    username: 'user1',
+                    password: 'user1123',
+                    name: '前田 拓',
+                    email: 'taku.maeda@csri-japan.com',
+                    role: 'user',
+                    department: 'インベストメント部'
+                },
+                {
+                    id: 3,
+                    username: 'user2',
+                    password: 'user2123',
+                    name: '藤森 義明',
+                    email: 'yoshiaki.fujimori@csri-japan.com',
+                    role: 'user',
+                    department: 'インベストメント部'
+                },
+                {
+                    id: 4,
+                    username: 'user3',
+                    password: 'user3123',
+                    name: '堀内 駿太郎',
+                    email: 'shuntaro.horiuchi@csri-japan.com',
+                    role: 'user',
+                    department: 'インベストメント部'
+                },
+                {
+                    id: 5,
+                    username: 'user4',
+                    password: 'user4123',
+                    name: '髙橋 邦比呂',
+                    email: 'kunihiro.takahashi@csri-japan.com',
+                    role: 'user',
+                    department: 'インベストメント部'
+                },                {
+                    id: 6,
+                    username: 'user5',
+                    password: 'user5123',
+                    name: '金井 駿太朗',
+                    email: 'shuntaro.kanai@csri-japan.com',
+                    role: 'user',
+                    department: 'インベストメント部'
+                },
+                {
+                    id: 7,
+                    username: 'user6',
+                    password: 'user6123',
+                    name: '塩谷 輝',
+                    email: 'hikaru.shioya@csri-japan.com',
+                    role: 'user',
+                    department: 'インベストメント部'
+                },
+                {
+                    id: 8,
+                    username: 'user7',
+                    password: 'user7123',
+                    name: '嶋﨑 江美',
+                    email: 'emi.shimazaki@csri-japan.com',
+                    role: 'user',
+                    department: 'インベストメント部'
+                },
+                {
+                    id: 9,
+                    username: 'user8',
+                    password: 'user8123',
+                    name: '吉田 愛美',
+                    email: 'manami.yoshida@csri-japan.com',
+                    role: 'user',
+                    department: 'オペレーションズ部'
+                },
+                {
+                    id: 10,
+                    username: 'user9',
+                    password: 'user9123',
+                    name: '金子 明彦',
+                    email: 'akihiko.kaneko@csri-japan.com',
+                    role: 'user',
+                    department: 'オペレーションズ部'
+                },
+                {
+                    id: 11,
+                    username: 'user10',
+                    password: 'user10123',
+                    name: '川端 真至',
+                    email: 'shinji.kawahata@csri-japan.com',
+                    role: 'user',
+                    department: 'オペレーションズ部'
+                }
+            ],
+            courses: [],
+            learningRecords: [],
+            learningState: {
+                screen: 'start',
+                slideIndex: 0,
+                questionIndex: 0,
+                userName: '',
+                userDept: '',
+                answers: {},
+                showExplanations: {}
+            }
+        };
+
+        // PowerPoint解析エンジン
+        const PPTXAnalyzer = {
+            extractedImages: [],
+            
+            async analyzePPTX(file) {
+                try {
+                    const zip = await JSZip.loadAsync(file);
+                    const imageFiles = [];
+                    
+                    const files = Object.keys(zip.files)
+                        .filter(name => name.startsWith('ppt/media/') && 
+                                      (name.endsWith('.png') || name.endsWith('.jpg') || 
+                                       name.endsWith('.jpeg') || name.endsWith('.emf')))
+                        .sort();
+                    
+                    for (const filename of files) {
+                        try {
+                            const file = zip.files[filename];
+                            const blob = await file.async('blob');
+                            const base64 = await this.blobToBase64(blob);
+                            
+                            let mimeType = 'image/png';
+                            if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) {
+                                mimeType = 'image/jpeg';
+                            }
+                            
+                            imageFiles.push({
+                                name: filename,
+                                data: base64,
+                                mimeType: mimeType
+                            });
+                        } catch (err) {
+                            console.error('画像読み込みエラー:', filename, err);
+                        }
+                    }
+                    
+                    this.extractedImages = imageFiles;
+                    
+                    return {
+                        fileName: file.name,
+                        totalSlides: Math.max(imageFiles.length, 19),
+                        extractedImageCount: imageFiles.length,
+                        sections: {
+                            training: {
+                                name: '研修テキスト',
+                                slideCount: Math.max(imageFiles.length, 19),
+                                topics: []
+                            },
+                            test: {
+                                name: '確認テスト',
+                                slideCount: 10,
+                                questions: EXTRACTED_QUESTIONS
+                            },
+                            explanation: {
+                                name: '解説',
+                                slideCount: 0,
+                                topics: []
+                            }
+                        },
+                        metadata: {
+                            title: 'インサイダー取引規制における取引推奨行為に関する研修',
+                            subtitle: 'PEファンド従業員向け',
+                            date: new Date().toISOString().split('T')[0]
+                        }
+                    };
+                } catch (error) {
+                    console.error('PPTX解析エラー:', error);
+                    return null;
+                }
+            },
+            
+            blobToBase64(blob) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            }
+        };
+
+        // メインアプリケーション
+        const App = {
+            currentView: 'login',
+            currentTab: 'dashboard',
+
+            async init() {
+                await Database.load();
+                
+                // 自動保存は無効化
+                // setInterval(() => {
+                //     if (AppData.courses.length > 0 || AppData.learningRecords.length > 0) {
+                //         Database.save();
+                //     }
+                // }, 5000);
+                
+                setInterval(() => {
+                    if (AppData.currentUser && 
+                        (AppData.learningState.screen === 'training' || 
+                         AppData.learningState.screen === 'quiz')) {
+                        Database.saveProgress(AppData.currentUser.id);
+                    }
+                }, 30000);
+                
+                this.render();
+            },
+
+            render() {
+                const appDiv = document.getElementById('app');
+                
+                if (!AppData.currentUser) {
+                    appDiv.innerHTML = this.renderLogin();
+                    this.attachLoginListeners();
+                } else if (this.currentView === 'learning') {
+                    appDiv.innerHTML = this.renderLearning();
+                    this.attachLearningListeners();
+                } else if (AppData.currentUser.role === 'admin') {
+                    appDiv.innerHTML = this.renderAdmin();
+                    this.attachAdminListeners();
+                } else {
+                    appDiv.innerHTML = this.renderLearning();
+                    this.attachLearningListeners();
+                }
+            },
+
+            renderLogin() {
+                return `
+                    <div class="app-container">
+                        <div class="header">
+                            <div class="header-left">
+                                <h1>📚 eラーニングシステム</h1>
+                            </div>
+                        </div>
+                        <div class="login-screen">
+                            <div class="login-box">
+                                <h2>ログイン</h2>
+                                <div class="form-group">
+                                    <label>ユーザー名</label>
+                                    <input type="text" id="username">
+                                </div>
+                                <div class="form-group">
+                                    <label>パスワード</label>
+                                    <input type="password" id="password">
+                                </div>
+                                <button class="btn btn-primary" style="width: 100%;" onclick="App.login()">
+                                    ログイン
+                                </button>
+                                
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderAdmin() {
+                return `
+                    <div class="app-container">
+                        <div class="header">
+                            <div class="header-left">
+                                <h1>📚 eラーニング管理システム</h1>
+                                <p>管理者ダッシュボード</p>
+                            </div>
+                            <div class="header-right" style="text-align: right;">
+                                <div style="color: white; margin-bottom: 10px;">
+                                    👤 ${AppData.currentUser.name} (管理者)
+                                </div>
+                                <button class="btn btn-logout btn-small" onclick="App.logout()">
+                                    ログアウト
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="nav-tabs">
+                            <div class="nav-tab ${App.currentTab === 'dashboard' ? 'active' : ''}" 
+                                 onclick="App.switchTab('dashboard')">
+                                📊 ダッシュボード
+                            </div>
+                            <div class="nav-tab ${App.currentTab === 'courses' ? 'active' : ''}" 
+                                 onclick="App.switchTab('courses')">
+                                📖 コース管理
+                            </div>
+                            <div class="nav-tab ${App.currentTab === 'learners' ? 'active' : ''}" 
+                                 onclick="App.switchTab('learners')">
+                                👥 受講者管理
+                            </div>
+                            <div class="nav-tab ${App.currentTab === 'import' ? 'active' : ''}" 
+                                 onclick="App.switchTab('import')">
+                                📤 PPTXインポート
+                            </div>
+                            <div class="nav-tab ${App.currentTab === 'preview-learning' ? 'active' : ''}" 
+                                 onclick="App.switchToLearning()">
+                                🎓 受講画面へ
+                            </div>
+                        </div>
+                        
+                        <div class="content-area">
+                            ${this.renderAdminTab()}
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderAdminTab() {
+                switch (App.currentTab) {
+                    case 'dashboard':
+                        return this.renderDashboard();
+                    case 'courses':
+                        return this.renderCourses();
+                    case 'learners':
+                        return this.renderLearners();
+                    case 'import':
+                        return this.renderImport();
+                    default:
+                        return '';
+                }
+            },
+
+            renderDashboard() {
+                const totalUsers = AppData.users.filter(u => u.role === 'user').length;
+                const totalCourses = AppData.courses.length;
+                const totalRecords = AppData.learningRecords.length;
+                const completedRecords = AppData.learningRecords.filter(r => r.passed).length;
+                
+                return `
+                    <div class="section-header">
+                        <h2>📊 ダッシュボード</h2>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; ">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 12px;">
+                            <div style="font-size: 48px; font-weight: 700;">${totalUsers}</div>
+                            <div style="font-size: 18px; margin-top: 10px;">登録受講者数</div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 30px; border-radius: 12px;">
+                            <div style="font-size: 48px; font-weight: 700;">${totalCourses}</div>
+                            <div style="font-size: 18px; margin-top: 10px;">コース数</div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 30px; border-radius: 12px;">
+                            <div style="font-size: 48px; font-weight: 700;">${totalRecords}</div>
+                            <div style="font-size: 18px; margin-top: 10px;">総受講数</div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; padding: 30px; border-radius: 12px;">
+                            <div style="font-size: 48px; font-weight: 700;">${completedRecords}</div>
+                            <div style="font-size: 18px; margin-top: 10px;">修了者数</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: white; border-radius: 12px; padding: 30px; border: 2px solid #e5e7eb; margin-bottom: 20px;">
+                        <h3 style="color: #1e3c72; margin-bottom: 20px;">📌 システム情報</h3>
+                        <p style="color: #6b7280; line-height: 2;">
+                            ✅ システムは正常に動作しています<br>
+                            ✅ 全機能が利用可能です<br>
+                            ✅ 中断・再開機能が有効<br>
+                            ✅ スライド表示最適化済み<br>
+                            ✅ 受講者追加機能実装済み
+                        </p>
+                    </div>
+                    
+                    <div style="background: white; border-radius: 12px; padding: 30px; border: 2px solid #e5e7eb;">
+                        <h3 style="color: #1e3c72; margin-bottom: 20px;">💾 データベース管理</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <button class="btn btn-success" onclick="App.saveDatabase()">
+                                💾 手動保存
+                            </button>
+                            <button class="btn btn-primary" onclick="App.exportDatabase()">
+                                📤 データエクスポート
+                            </button>
+                            <button class="btn btn-warning" onclick="App.importDatabase()">
+                                📥 データインポート
+                            </button>
+                            <button class="btn btn-danger" onclick="App.clearDatabase()">
+                                🗑️ データクリア
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderLearners() {
+                const learners = AppData.users.filter(u => u.role === 'user');
+                
+                return `
+                    <div class="section-header">
+                        <h2>👥 受講者管理</h2>
+                        <button class="btn btn-primary" onclick="App.showAddLearnerModal()">
+                            ➕ 受講者を追加
+                        </button>
+                    </div>
+
+                    ${learners.length === 0 ? `
+                        <div style="text-align: center; padding: 60px;">
+                            <div style="font-size: 64px; margin-bottom: 20px;">👥</div>
+                            <h3>受講者がまだいません</h3>
+                            <button class="btn btn-primary" style="margin-top: 20px;" onclick="App.showAddLearnerModal()">
+                                最初の受講者を追加
+                            </button>
+                        </div>
+                    ` : `
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden;">
+                                <thead style="background: #f9fafb;">
+                                    <tr>
+                                        <th style="padding: 15px; text-align: left; border-bottom: 2px solid #e5e7eb;">氏名</th>
+                                        <th style="padding: 15px; text-align: left; border-bottom: 2px solid #e5e7eb;">部署</th>
+                                        <th style="padding: 15px; text-align: left; border-bottom: 2px solid #e5e7eb;">メール</th>
+                                        <th style="padding: 15px; text-align: center; border-bottom: 2px solid #e5e7eb;">受講状況</th>
+                                        <th style="padding: 15px; text-align: center; border-bottom: 2px solid #e5e7eb;">テスト結果</th>
+                                        <th style="padding: 15px; text-align: center; border-bottom: 2px solid #e5e7eb;">修了証</th>
+                                        <th style="padding: 15px; text-align: center; border-bottom: 2px solid #e5e7eb;">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${learners.map(learner => {
+                                        const records = AppData.learningRecords.filter(r => r.userId === learner.id);
+                                        const latestRecord = records.length > 0 ? records[records.length - 1] : null;
+                                        
+                                        let statusBadge = '<span style="background: #e5e7eb; color: #6b7280; padding: 4px 12px; border-radius: 12px; font-size: 12px;">未開始</span>';
+                                        let testResult = '-';
+                                        let certificate = '-';
+                                        
+                                        if (latestRecord) {
+                                            if (latestRecord.status === 'completed') {
+                                                if (latestRecord.passed) {
+                                                    statusBadge = '<span style="background: #d1fae5; color: #065f46; padding: 4px 12px; border-radius: 12px; font-size: 12px;">✅ 修了</span>';
+                                                    certificate = '<button class="btn btn-success btn-small" onclick="App.viewCertificate(' + learner.id + ')">📜 表示</button>';
+                                                } else {
+                                                    statusBadge = '<span style="background: #fee2e2; color: #991b1b; padding: 4px 12px; border-radius: 12px; font-size: 12px;">❌ 不合格</span>';
+                                                }
+                                                testResult = `<span style="color: ${latestRecord.passed ? '#10b981' : '#ef4444'}; font-weight: 600;">${latestRecord.score}点 / ${latestRecord.totalQuestions}問</span>`;
+                                            }
+                                        }
+                                        
+                                        return `
+                                            <tr style="border-bottom: 1px solid #e5e7eb;">
+                                                <td style="padding: 15px;">${learner.name}</td>
+                                                <td style="padding: 15px;">${learner.department}</td>
+                                                <td style="padding: 15px;">${learner.email}</td>
+                                                <td style="padding: 15px; text-align: center;">${statusBadge}</td>
+                                                <td style="padding: 15px; text-align: center;">${testResult}</td>
+                                                <td style="padding: 15px; text-align: center;">${certificate}</td>
+                                                <td style="padding: 15px; text-align: center;">
+                                                    <button class="btn btn-primary btn-small" onclick="App.viewLearnerDetail(${learner.id})">
+                                                        詳細
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `}
+                `;
+            },
+
+            renderCourses() {
+    if (AppData.courses.length === 0) {
+        return `
+            <div style="text-align: center; padding: 60px;">
+                <div style="font-size: 64px; margin-bottom: 20px;">📚</div>
+                <h3>コースがまだありません</h3>
+                <p style="color: #6b7280; margin-bottom: 20px;">PowerPointファイルをインポートしてコースを作成してください</p>
+                <button class="btn btn-primary" onclick="App.switchTab('import')">
+                    最初のコースをインポート
+                </button>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="section-header">
+            <h2>コース管理</h2>
+            <button class="btn btn-primary" onclick="App.switchTab('import')">
+                ➕ 新規インポート
+            </button>
+        </div>
+
+        ${AppData.courses.map(course => `
+            <div class="course-card">
+                <h3 style="color: #1e3c72; margin-bottom: 10px;">${course.title || 'インサイダー取引規制研修'}</h3>
+                <p style="color: #6b7280; margin-bottom: 15px;">${course.description || 'PEファンド従業員向けeラーニング研修'}</p>
+                
+                <div class="course-structure">
+                    <h4 style="margin-bottom: 15px;">コース構成</h4>
+                    
+                    <div class="structure-item">
+                        <span class="section-badge badge-training">研修</span>
+                        <span>${course.slideImages ? course.slideImages.length : 0} スライド</span>
+                        ${course.slideImages && course.slideImages.length > 0 ? 
+                            `<span style="color: #10b981; margin-left: 10px;">✅ ${course.slideImages.length}枚の画像</span>` : 
+                            `<span style="color: #f59e0b; margin-left: 10px;">⚠️ 画像なし</span>`}
+                    </div>
+
+                    <div class="structure-item">
+                        <span class="section-badge badge-test">テスト</span>
+                        <span>${course.quiz ? course.quiz.length : 0} 問</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary btn-small" onclick="App.startLearning(${course.id})">
+                        🎓 受講する
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="App.deleteCourse(${course.id})">
+                        🗑️ 削除
+                    </button>
+                </div>
+            </div>
+        `).join('')}
+    `;
+},
+
+
+            renderImport() {
+                return `
+                    <div class="section-header">
+                        <h2>PowerPointインポート</h2>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; ">
+                        <div class="file-upload-area" id="pptxUploadArea" style="border-color: #667eea; background: #f0f4ff;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">📄</div>
+                            <h3 style="color: #1e3c72;">STEP 1: PPTXファイル</h3>
+                            <p style="color: #6b7280; margin: 20px 0;">
+                                PowerPointファイルから<br>問題を自動抽出
+                            </p>
+                            <input type="file" id="courseFile" accept=".pptx" style="display: none;" />
+                            <button class="btn btn-primary" onclick="document.getElementById('courseFile').click()">
+                                📄 PPTXを選択
+                            </button>
+                            <div id="pptxStatus" style="margin-top: 15px; font-size: 14px;"></div>
+                        </div>
+
+                        <div class="file-upload-area" id="imageUploadArea" style="border-color: #10b981; background: #f0fdf4;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">🖼️</div>
+                            <h3 style="color: #065f46;">STEP 2: スライド画像</h3>
+                            <p style="color: #6b7280; margin: 20px 0;">
+                                PowerPointから<br>エクスポートした画像を選択
+                            </p>
+                            <input type="file" id="imageFiles" accept="image/png,image/jpeg,image/jpg" multiple style="display: none;" />
+                            <input type="file" id="imageZipFile" accept=".zip" style="display: none;" />
+                            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                                <button class="btn btn-success" onclick="document.getElementById('imageFiles').click()">
+                                    🖼️ 画像を選択
+                                </button>
+                                <button class="btn btn-success" onclick="document.getElementById('imageZipFile').click()">
+                                    📦 ZIPを選択
+                                </button>
+                            </div>
+                            <div id="imageStatus" style="margin-top: 15px; font-size: 14px;"></div>
+                        </div>
+                    </div>
+
+                    <div style="background: #fffbeb; border: 2px solid #f59e0b; border-radius: 12px; padding: 20px; ">
+                        <h4 style="color: #92400e; margin-bottom: 15px;">💡 PowerPointから画像をエクスポートする方法</h4>
+                        <ol style="color: #78350f; line-height: 2; margin-left: 20px;">
+                            <li>PowerPointを開く</li>
+                            <li>「ファイル」→「エクスポート」→「ファイル形式の変更」を選択</li>
+                            <li>「PNG」または「JPEG」を選択</li>
+                            <li>「すべてのスライド」を選択してエクスポート</li>
+                            <li>エクスポートされた画像をここにアップロード</li>
+                        </ol>
+                    </div>
+
+                    <div id="processingIndicator" class="processing-indicator">
+                        <div class="spinner"></div>
+                        <h3 style="color: #1e3c72;">解析中...</h3>
+                    </div>
+
+                    <div id="analysisResult" class="analysis-result">
+                        <h3 style="color: #1e3c72; margin-bottom: 20px;">📊 解析結果</h3>
+                        <div id="analysisContent"></div>
+                        <div style="margin-top: 25px; display: flex; gap: 15px; flex-wrap: wrap;">
+                            <button class="btn btn-success" onclick="App.saveCourse()">
+                                ✅ 保存
+                            </button>
+                            <button class="btn btn-secondary" onclick="App.cancelImport()">
+                                キャンセル
+                            </button>
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderLearning() {
+                const state = AppData.learningState;
+                const totalSlides = slideImages.length || 19;
+                const totalQuestions = EXTRACTED_QUESTIONS.length;
+                
+                let progress = 0;
+                if (state.screen === 'training') {
+                    progress = ((state.slideIndex + 1) / totalSlides) * 50;
+                } else if (state.screen === 'quiz') {
+                    progress = 50 + (Object.keys(state.answers).length / totalQuestions) * 50;
+                } else if (state.screen === 'result') {
+                    progress = 100;
+                }
+
+                let content = '';
+
+                if (state.screen === 'start') {
+                    content = this.renderStartScreen(totalSlides, totalQuestions);
+                } else if (state.screen === 'training') {
+                    content = this.renderTrainingScreen(state, totalSlides);
+                } else if (state.screen === 'quiz') {
+                    content = this.renderQuizScreen(state, totalQuestions);
+                } else if (state.screen === 'result') {
+                    content = this.renderResultScreen(state, totalQuestions);
+                }
+
+                return `
+                    <div class="app-container">
+                        <div class="header">
+                            <div class="header-left">
+                                <h1>インサイダー取引規制における取引推奨行為</h1>
+                                <p>PEファンド従業員向けeラーニング研修</p>
+                                ${state.screen !== 'start' ? `
+                                    <div class="progress-bar-container">
+                                        <div class="progress-bar" style="width: ${progress}%"></div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div class="header-right" style="text-align: right;">
+                                <div style="color: white; margin-bottom: 10px;">
+                                    👤 ${AppData.currentUser.name}
+                                </div>
+                                ${AppData.currentUser.role === 'admin' ? `
+                                    <button class="btn btn-logout btn-small" onclick="App.backToAdmin()">
+                                        管理画面へ
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-logout btn-small" onclick="App.logout()">
+                                        ログアウト
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                        <div class="content-area">
+                            ${content}
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderStartScreen(totalSlides, totalQuestions) {
+                const progress = AppData.savedProgress;
+                
+                return `
+                    ${progress ? `
+                        <div class="resume-banner">
+                            <div class="resume-banner-content">
+                                <div class="resume-banner-title">⏸️ 前回の続きがあります</div>
+                                <div class="resume-banner-text">
+                                    ${progress.screen === 'training' ? 
+                                        `研修スライド ${progress.slideIndex + 1}/${totalSlides} まで進んでいます` :
+                                        `テスト ${Object.keys(progress.answers || {}).length}/${totalQuestions} 問まで回答済みです`
+                                    }
+                                    <br>最終更新: ${new Date(progress.lastUpdated).toLocaleString('ja-JP')}
+                                </div>
+                            </div>
+                            <div class="resume-banner-actions">
+                                <button class="btn btn-success" onclick="App.resumeLearning()">
+                                    ▶️ 続きから再開
+                                </button>
+                                <button class="btn btn-secondary" onclick="App.startFromBeginning()">
+                                    🔄 最初から
+                                </button>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="start-screen">
+                        <h2>インサイダー取引規制 eラーニング研修へようこそ</h2>
+                        <p>本研修では、金融商品取引法におけるインサイダー取引規制、特に「取引推奨行為」について学習します。</p>
+                        
+                        <div class="course-info">
+                            <h3>📚 研修内容</h3>
+                            <ul>
+                                <li><span>📖</span> <span>研修スライド: ${totalSlides}枚</span></li>
+                                <li><span>✏️</span> <span>確認テスト: 4択式問題 ${totalQuestions}問</span></li>
+                                <li><span>⏱️</span> <span>所要時間: 約30〜40分</span></li>
+                                <li><span>🎯</span> <span>合格基準: ${totalQuestions}問中8問以上正解</span></li>
+                                <li><span>🏆</span> <span>修了証: 合格者に発行</span></li>
+                                <li><span>💾</span> <span><strong>途中で中断しても進行状況を保存</strong></span></li>
+                            </ul>
+                        </div>
+
+                        <div style="margin: 40px auto; max-width: 400px;">
+                            ${!progress ? `
+                                <div class="form-group">
+                                    <label>氏名 <span style="color: #ef4444;">*</span></label>
+                                    <input type="text" id="userName" placeholder="山田 太郎" value="${AppData.currentUser.name}">
+                                </div>
+                                <div class="form-group">
+                                    <label>所属部署 <span style="color: #ef4444;">*</span></label>
+                                    <input type="text" id="userDept" placeholder="インベストメント部" value="${AppData.currentUser.department || ''}">
+                                </div>
+                                <button class="btn btn-primary" style="width: 100%; padding: 15px; font-size: 18px;" onclick="App.startTraining()">
+                                    研修を開始する →
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderTrainingScreen(state, totalSlides) {
+                const courseImages = AppData.currentCourse && AppData.currentCourse.slideImages 
+                    ? AppData.currentCourse.slideImages 
+                    : [];
+                
+                let imageToShow = null;
+                
+                if (courseImages.length > state.slideIndex) {
+                    imageToShow = courseImages[state.slideIndex].data;
+                } else if (slideImages.length > state.slideIndex) {
+                    imageToShow = slideImages[state.slideIndex];
+                }
+                
+                return `
+                    <div class="slide-container">
+                        <button class="btn btn-secondary slide-nav-button" 
+                                ${state.slideIndex === 0 ? 'disabled' : ''}
+                                onclick="App.prevSlide()">
+                            ← 前へ
+                        </button>
+                        
+                        <div class="slide-content-wrapper">
+                            <div style="text-align: center; margin-bottom: 20px; width: 100%;">
+                                <div style="color: #667eea; font-weight: 600; font-size: 20px;">
+                                    スライド ${state.slideIndex + 1} / ${totalSlides}
+                                </div>
+                            </div>
+                            
+                            ${imageToShow ? 
+                                `<img src="${imageToShow}" alt="スライド ${state.slideIndex + 1}" class="slide-image">` :
+                                `<div style="padding: 100px; background: #f9fafb; border-radius: 8px;">
+                                    <p style="font-size: 24px; color: #1e3c72; margin-bottom: 20px;">📄 スライド ${state.slideIndex + 1}</p>
+                                    <p style="color: #6b7280;">※ 画像がありません</p>
+                                </div>`
+                            }
+                            
+                            
+                        </div>
+                        
+                        ${state.slideIndex < totalSlides - 1 ? 
+                            `<button class="btn btn-primary slide-nav-button" onclick="App.nextSlide()">次へ →</button>` :
+                            `<button class="btn btn-success slide-nav-button" onclick="App.startQuiz()">テストへ進む →</button>`
+                        }
+                    </div>
+                `;
+            },
+
+            renderQuizScreen(state, totalQuestions) {
+                const question = EXTRACTED_QUESTIONS[state.questionIndex];
+                const userAnswer = state.answers[question.id];
+                const showExplanation = state.showExplanations[question.id];
+
+                return `
+                    <div class="quiz-question">
+                        <div class="question-header">
+                            <div class="question-number">
+                                問題 ${state.questionIndex + 1} / ${totalQuestions}
+                            </div>
+                            <div style="color: #3b82f6; font-size: 12px;">💾 回答は自動保存されます</div>
+                        </div>
+
+                        <div class="question-text">
+                            ${question.question}
+                        </div>
+
+                        <div class="options">
+                            ${question.options.map((option, index) => {
+                                let optionClass = 'option';
+                                if (userAnswer !== undefined) {
+                                    if (index === question.correctAnswer) {
+                                        optionClass += ' correct';
+                                    } else if (index === userAnswer) {
+                                        optionClass += ' incorrect';
+                                    }
+                                }
+
+                                return `
+                                    <div class="${optionClass}" 
+                                         onclick="${userAnswer === undefined ? `App.selectAnswer(${question.id}, ${index})` : ''}">
+                                        <div class="option-label">${String.fromCharCode(65 + index)}.</div>
+                                        <div style="flex: 1;">${option}</div>
+                                        ${userAnswer !== undefined && index === question.correctAnswer ? 
+                                            '<div style="color: #10b981; font-weight: 700;">✓ 正解</div>' : ''}
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+
+                        ${userAnswer !== undefined && showExplanation ? `
+                            <div class="explanation-box">
+                                <div class="explanation-title">📖 解説</div>
+                                <div class="explanation-text">${question.explanation}</div>
+                            </div>
+                        ` : ''}
+
+                        <div class="navigation">
+                            <button class="btn btn-secondary" 
+                                    ${state.questionIndex === 0 ? 'disabled' : ''}
+                                    onclick="App.prevQuestion()">
+                                ← 前の問題
+                            </button>
+                            <div>
+                                ${userAnswer !== undefined && !showExplanation ? 
+                                    `<button class="btn btn-warning" onclick="App.showExplanation(${question.id})">
+                                        解説を表示
+                                    </button>` : ''}
+                            </div>
+                            ${state.questionIndex < totalQuestions - 1 ? 
+                                `<button class="btn btn-primary" 
+                                         ${userAnswer === undefined ? 'disabled' : ''}
+                                         onclick="App.nextQuestion()">
+                                    次の問題 →
+                                </button>` :
+                                `<button class="btn btn-success" 
+                                         ${userAnswer === undefined ? 'disabled' : ''}
+                                         onclick="App.finishQuiz()">
+                                    結果を表示 →
+                                </button>`
+                            }
+                        </div>
+                    </div>
+                `;
+            },
+
+            renderResultScreen(state, totalQuestions) {
+                const correctCount = Object.entries(state.answers).filter(([questionId, answer]) => {
+                    const question = EXTRACTED_QUESTIONS.find(q => q.id == questionId);
+                    return question && answer === question.correctAnswer;
+                }).length;
+
+                const score = Math.round((correctCount / totalQuestions) * 100);
+                const passed = correctCount >= 8;
+
+                return `
+                    <div class="quiz-result">
+                        <h2 style="color: #1e3c72; ">研修テスト結果</h2>
+                        
+                        <div class="score-display">${correctCount} / ${totalQuestions}</div>
+                        
+                        <div class="result-message ${passed ? 'pass' : 'fail'}">
+                            ${passed ? '🎉 合格おめでとうございます!' : '😢 不合格です'}
+                        </div>
+
+                        <p style="font-size: 18px; color: #6b7280; margin: 20px 0;">
+                            正答率: ${score}%
+                        </p>
+
+                        ${passed ? `
+                            <div class="certificate-container">
+                                <div class="certificate-title">🏆 修了証</div>
+                                <div class="certificate-body">
+                                    <p style="font-size: 20px; margin-bottom: 20px;">以下の者は</p>
+                                    <div class="certificate-name">${state.userName}</div>
+                                    <p style="margin: 20px 0; line-height: 1.8;">
+                                        インサイダー取引規制における<br>
+                                        取引推奨行為に関する研修を<br>
+                                        修了したことを証明します
+                                    </p>
+                                    <p style="margin-top: 30px; color: #6b7280;">
+                                        ${new Date().toLocaleDateString('ja-JP')}
+                                    </p>
+                                    <p style="margin-top: 10px; font-weight: 600;">
+                                        ${state.userDept}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary" onclick="window.print()">
+                                🖨️ 修了証を印刷
+                            </button>
+                        ` : `
+                            <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 25px; margin: 30px auto; max-width: 600px;">
+                                <p style="color: #92400e; line-height: 1.8;">
+                                    合格基準は${totalQuestions}問中8問以上の正解です。<br>
+                                    もう一度研修資料を確認し、再チャレンジしてください。
+                                </p>
+                            </div>
+
+                            <button class="btn btn-warning" onclick="App.retakeQuiz()">
+                                もう一度受講する
+                            </button>
+                        `}
+                    </div>
+                `;
+            },
+
+            attachLoginListeners() {
+                const passwordInput = document.getElementById('password');
+                if (passwordInput) {
+                    passwordInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') this.login();
+                    });
+                }
+            },
+
+            attachAdminListeners() {
+                const fileInput = document.getElementById('courseFile');
+                if (fileInput) {
+                    fileInput.addEventListener('change', async (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            await this.handleFileUpload(file);
+                        }
+                    });
+                }
+
+                const imageInput = document.getElementById('imageFiles');
+                if (imageInput) {
+                    imageInput.addEventListener('change', async (e) => {
+                        const files = Array.from(e.target.files);
+                        if (files.length > 0) {
+                            await this.handleImageUpload(files);
+                        }
+                    });
+                }
+
+                const zipInput = document.getElementById('imageZipFile');
+                if (zipInput) {
+                    zipInput.addEventListener('change', async (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            await this.handleZipUpload(file);
+                        }
+                    });
+                }
+            },
+
+            attachLearningListeners() {},
+
+            async login() {
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+
+                const user = AppData.users.find(u => 
+                    u.username === username && u.password === password
+                );
+
+                if (user) {
+                    AppData.currentUser = user;
+                    const progress = await Database.loadProgress(user.id);
+                    if (progress) {
+                        AppData.savedProgress = progress;
+                    }
+                    
+                    // コースが存在する場合、最初のコースをcurrentCourseに設定
+                    if (AppData.courses.length > 0) {
+                        AppData.currentCourse = AppData.courses[0];
+                    }
+                    
+                    if (user.role === 'admin') {
+                        this.currentView = 'admin';
+                    } else {
+                        this.currentView = 'learning';
+                    }
+                    this.render();
+                } else {
+                    alert('ログインに失敗しました');
+                }
+            },
+
+            async logout() {
+                if (confirm('ログアウトしますか?')) {
+                    if (AppData.currentUser && 
+                        (AppData.learningState.screen === 'training' || 
+                         AppData.learningState.screen === 'quiz')) {
+                        await Database.saveProgress(AppData.currentUser.id);
+                    }
+                    
+                    AppData.currentUser = null;
+                    AppData.savedProgress = null;
+                    this.currentView = 'login';
+                    AppData.learningState = {
+                        screen: 'start',
+                        slideIndex: 0,
+                        questionIndex: 0,
+                        userName: '',
+                        userDept: '',
+                        answers: {},
+                        showExplanations: {}
+                    };
+                    this.render();
+                }
+            },
+
+            switchTab(tab) {
+                this.currentTab = tab;
+                this.render();
+            },
+
+            switchToLearning() {
+                // コースが存在する場合、最初のコースをcurrentCourseに設定
+                if (AppData.courses.length > 0 && !AppData.currentCourse) {
+                    AppData.currentCourse = AppData.courses[0];
+                }
+                
+                this.currentView = 'learning';
+                if (AppData.currentUser) {
+                    const progress = Database.loadProgress(AppData.currentUser.id);
+                    if (progress) {
+                        AppData.savedProgress = progress;
+                    }
+                }
+                this.render();
+            },
+
+            async backToAdmin() {
+                if (AppData.currentUser && 
+                    (AppData.learningState.screen === 'training' || 
+                     AppData.learningState.screen === 'quiz')) {
+                    await Database.saveProgress(AppData.currentUser.id);
+                }
+                this.currentView = 'admin';
+                this.render();
+            },
+
+            async startLearning(courseId) {
+                if (courseId) {
+                    const course = AppData.courses.find(c => c.id === courseId);
+                    if (course) {
+                        AppData.currentCourse = course;
+                    }
+                } else if (AppData.courses.length > 0) {
+                    AppData.currentCourse = AppData.courses[0];
+                }
+                
+                if (AppData.currentUser) {
+                    const progress = await Database.loadProgress(AppData.currentUser.id);
+                    if (progress) {
+                        AppData.savedProgress = progress;
+                    }
+                }
+                
+                this.currentView = 'learning';
+                AppData.learningState.screen = 'start';
+                this.render();
+            },
+
+            resumeLearning() {
+                if (AppData.savedProgress) {
+                    AppData.learningState = {
+                        ...AppData.savedProgress,
+                        answers: AppData.savedProgress.answers || {},
+                        showExplanations: AppData.savedProgress.showExplanations || {}
+                    };
+                    
+                    if (AppData.savedProgress.courseId) {
+                        const course = AppData.courses.find(c => c.id === AppData.savedProgress.courseId);
+                        if (course) {
+                            AppData.currentCourse = course;
+                        }
+                    }
+                    
+                    AppData.savedProgress = null;
+                    this.render();
+                }
+            },
+
+            async startFromBeginning() {
+                if (confirm('前回の進行状況を削除して、最初から開始しますか?')) {
+                    if (AppData.currentUser) {
+                        await Database.clearProgress(AppData.currentUser.id);
+                    }
+                    AppData.savedProgress = null;
+                    
+                    // コースが設定されていない場合、最初のコースを設定
+                    if (!AppData.currentCourse && AppData.courses.length > 0) {
+                        AppData.currentCourse = AppData.courses[0];
+                    }
+                    
+                    AppData.learningState = {
+                        screen: 'start',
+                        slideIndex: 0,
+                        questionIndex: 0,
+                        userName: AppData.currentUser.name,
+                        userDept: AppData.currentUser.department || '',
+                        answers: {},
+                        showExplanations: {}
+                    };
+                    this.render();
+                }
+            },
+
+            async handleFileUpload(file) {
+                const processingIndicator = document.getElementById('processingIndicator');
+                const analysisResult = document.getElementById('analysisResult');
+                
+                if (processingIndicator) processingIndicator.classList.add('active');
+                if (analysisResult) analysisResult.classList.remove('active');
+
+                try {
+                    const result = await PPTXAnalyzer.analyzePPTX(file);
+                    AppData.analysisResult = result;
+                    
+                    if (processingIndicator) processingIndicator.classList.remove('active');
+                    
+                    if (result) {
+                        this.displayAnalysisResult(result);
+                        const statusDiv = document.getElementById('pptxStatus');
+                        if (statusDiv) {
+                            statusDiv.innerHTML = '<span style="color: #10b981;">✅ PPTXファイル読み込み完了</span>';
+                        }
+                    }
+                } catch (error) {
+                    alert('エラー: ' + error.message);
+                    if (processingIndicator) processingIndicator.classList.remove('active');
+                }
+            },
+
+            async handleImageUpload(files) {
+                const statusDiv = document.getElementById('imageStatus');
+                
+                try {
+                    if (statusDiv) {
+                        statusDiv.innerHTML = `<span style="color: #667eea;">📊 ${files.length}枚の画像を処理中...</span>`;
+                    }
+
+                    const sortedFiles = files.sort((a, b) => {
+                        const numA = parseInt(a.name.match(/\d+/) || 0);
+                        const numB = parseInt(b.name.match(/\d+/) || 0);
+                        return numA - numB;
+                    });
+
+                    const imageData = [];
+                    for (const file of sortedFiles) {
+                        if (file.type.startsWith('image/')) {
+                            const base64 = await this.fileToBase64(file);
+                            imageData.push({
+                                name: file.name,
+                                data: base64,
+                                mimeType: file.type
+                            });
+                        }
+                    }
+
+                    PPTXAnalyzer.extractedImages = imageData;
+
+                    if (statusDiv) {
+                        statusDiv.innerHTML = `<span style="color: #10b981;">✅ ${imageData.length}枚の画像を読み込みました</span>`;
+                    }
+
+                    if (AppData.analysisResult) {
+                        this.displayAnalysisResult(AppData.analysisResult);
+                    }
+                } catch (error) {
+                    console.error('画像アップロードエラー:', error);
+                    if (statusDiv) {
+                        statusDiv.innerHTML = `<span style="color: #ef4444;">❌ エラー: ${error.message}</span>`;
+                    }
+                }
+            },
+
+            async handleZipUpload(file) {
+                const statusDiv = document.getElementById('imageStatus');
+                
+                try {
+                    if (statusDiv) {
+                        statusDiv.innerHTML = '<span style="color: #667eea;">📦 ZIPファイルを解凍中...</span>';
+                    }
+
+                    const zip = await JSZip.loadAsync(file);
+                    const imageFiles = [];
+
+                    const fileList = Object.keys(zip.files)
+                        .filter(name => {
+                            const lower = name.toLowerCase();
+                            return (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg')) 
+                                   && !name.startsWith('__MACOSX');
+                        })
+                        .sort();
+
+                    for (const filename of fileList) {
+                        const fileData = zip.files[filename];
+                        const blob = await fileData.async('blob');
+                        const base64 = await this.blobToBase64(blob);
+                        
+                        let mimeType = 'image/png';
+                        if (filename.toLowerCase().endsWith('.jpg') || filename.toLowerCase().endsWith('.jpeg')) {
+                            mimeType = 'image/jpeg';
+                        }
+
+                        imageFiles.push({
+                            name: filename,
+                            data: base64,
+                            mimeType: mimeType
+                        });
+                    }
+
+                    PPTXAnalyzer.extractedImages = imageFiles;
+
+                    if (statusDiv) {
+                        statusDiv.innerHTML = `<span style="color: #10b981;">✅ ${imageFiles.length}枚の画像を読み込みました</span>`;
+                    }
+
+                    if (AppData.analysisResult) {
+                        this.displayAnalysisResult(AppData.analysisResult);
+                    }
+                } catch (error) {
+                    console.error('ZIPアップロードエラー:', error);
+                    if (statusDiv) {
+                        statusDiv.innerHTML = `<span style="color: #ef4444;">❌ エラー: ${error.message}</span>`;
+                    }
+                }
+            },
+
+            fileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            },
+
+            blobToBase64(blob) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(blob);
+                });
+            },
+
+            displayAnalysisResult(result) {
+                const analysisContent = document.getElementById('analysisContent');
+                const analysisResult = document.getElementById('analysisResult');
+                
+                if (!analysisContent || !analysisResult) return;
+
+                const imageCount = PPTXAnalyzer.extractedImages.length;
+                
+                if (!result && imageCount > 0) {
+                    analysisContent.innerHTML = `
+                        <div class="analysis-section" style="border: 2px solid #10b981;">
+                            <h4>
+                                <span class="section-badge badge-training">スライド画像</span>
+                                ${imageCount} 枚読み込み完了 ✅
+                            </h4>
+                            <p style="color: #065f46; font-weight: 600;">画像ファイルをインポートしました!</p>
+                        </div>
+
+                        <div class="analysis-section">
+                            <h4>
+                                <span class="section-badge badge-test">確認テスト</span>
+                                ${EXTRACTED_QUESTIONS.length} 問(組み込み済み) ✅
+                            </h4>
+                        </div>
+                    `;
+                    analysisResult.classList.add('active');
+                    return;
+                }
+
+                if (!result) return;
+
+                analysisContent.innerHTML = `
+                    <div class="analysis-section">
+                        <h4>📄 ファイル情報</h4>
+                        <p><strong>ファイル名:</strong> ${result.fileName}</p>
+                        <p><strong>総スライド数:</strong> ${result.totalSlides} スライド</p>
+                        ${imageCount > 0 ? 
+                            `<p style="color: #10b981;"><strong>✅ 抽出画像:</strong> ${imageCount}枚</p>` :
+                            `<p style="color: #f59e0b;"><strong>⚠️ 画像抽出:</strong> 0枚(デモ用スライドを使用)</p>`}
+                    </div>
+
+                    ${imageCount > 0 ? `
+                        <div class="analysis-section" style="border: 2px solid #10b981;">
+                            <h4>
+                                <span class="section-badge badge-training">スライド画像</span>
+                                ${imageCount} 枚抽出 ✅
+                            </h4>
+                            <p style="color: #065f46; font-weight: 600;">実際のPowerPointスライド画像を抽出しました!</p>
+                        </div>
+                    ` : ''}
+
+                    <div class="analysis-section" style="border: 2px solid #10b981;">
+                        <h4>
+                            <span class="section-badge badge-test">確認テスト</span>
+                            ${result.sections.test.questions.length} 問検出 ✅
+                        </h4>
+                        <p style="color: #065f46; font-weight: 600;">全10問を正しく抽出しました!</p>
+                        <div class="question-list">
+                            ${result.sections.test.questions.map(q => `
+                                <div class="question-item">Q${q.number}</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                analysisResult.classList.add('active');
+            },
+
+            saveCourse() {
+                if (!AppData.analysisResult && PPTXAnalyzer.extractedImages.length === 0) {
+                    alert('❌ PPTXファイルまたは画像ファイルをアップロードしてください');
+                    return;
+                }
+
+                const result = AppData.analysisResult || {
+                    fileName: '手動作成コース',
+                    totalSlides: PPTXAnalyzer.extractedImages.length || 19,
+                    sections: {
+                        training: {
+                            name: '研修テキスト',
+                            slideCount: Math.max(PPTXAnalyzer.extractedImages.length || 19, 19),
+                            topics: []
+                        },
+                        test: {
+                            name: '確認テスト',
+                            slideCount: 10,
+                            questions: EXTRACTED_QUESTIONS
+                        },
+                        explanation: {
+                            name: '解説',
+                            slideCount: 0,
+                            topics: []
+                        }
+                    },
+                    metadata: {
+                        title: 'インサイダー取引規制における取引推奨行為に関する研修',
+                        subtitle: 'PEファンド従業員向け',
+                        date: new Date().toISOString().split('T')[0]
+                    }
+                };
+
+                const newCourse = {
+                    id: Date.now(),
+                    title: result.metadata.title,
+                    subtitle: result.metadata.subtitle,
+                    totalSlides: result.totalSlides,
+                    sections: result.sections,
+                    createdAt: result.metadata.date,
+                    slideImages: PPTXAnalyzer.extractedImages
+                };
+
+                AppData.courses.push(newCourse);
+                AppData.currentCourse = newCourse;
+                Database.save();
+                
+                alert('✅ コースを保存しました!' + 
+                      (PPTXAnalyzer.extractedImages.length > 0 ? 
+                       `\n${PPTXAnalyzer.extractedImages.length}枚の画像をインポートしました。` : 
+                       '\n※ デモ用スライドが使用されます。'));
+                
+                this.switchTab('courses');
+            },
+
+            cancelImport() {
+                AppData.analysisResult = null;
+                PPTXAnalyzer.extractedImages = [];
+                this.render();
+            },
+
+            deleteCourse(id) {
+                if (confirm('このコースを削除しますか?')) {
+                    AppData.courses = AppData.courses.filter(c => c.id !== id);
+                    Database.save();
+                    this.render();
+                }
+            },
+
+            async startTraining() {
+                const userName = document.getElementById('userName').value;
+                const userDept = document.getElementById('userDept').value;
+
+                if (!userName || !userDept) {
+                    alert('氏名と所属部署を入力してください');
+                    return;
+                }
+                
+                // コースが設定されていない場合、最初のコースを設定
+                if (!AppData.currentCourse && AppData.courses.length > 0) {
+                    AppData.currentCourse = AppData.courses[0];
+                }
+
+                AppData.learningState.userName = userName;
+                AppData.learningState.userDept = userDept;
+                AppData.learningState.screen = 'training';
+                AppData.learningState.slideIndex = 0;
+                
+                if (AppData.currentUser) {
+                    await Database.saveProgress(AppData.currentUser.id);
+                }
+                
+                this.render();
+            },
+
+            nextSlide() {
+                AppData.learningState.slideIndex++;
+                if (AppData.currentUser) {
+                    Database.saveProgress(AppData.currentUser.id);
+                }
+                this.render();
+            },
+
+            prevSlide() {
+                AppData.learningState.slideIndex--;
+                this.render();
+            },
+
+            startQuiz() {
+                AppData.learningState.screen = 'quiz';
+                AppData.learningState.questionIndex = 0;
+                if (AppData.currentUser) {
+                    Database.saveProgress(AppData.currentUser.id);
+                }
+                this.render();
+            },
+
+            selectAnswer(questionId, answer) {
+                AppData.learningState.answers[questionId] = answer;
+                if (AppData.currentUser) {
+                    Database.saveProgress(AppData.currentUser.id);
+                }
+                this.render();
+            },
+
+            showExplanation(questionId) {
+                AppData.learningState.showExplanations[questionId] = true;
+                this.render();
+            },
+
+            nextQuestion() {
+                AppData.learningState.questionIndex++;
+                this.render();
+            },
+
+            prevQuestion() {
+                AppData.learningState.questionIndex--;
+                this.render();
+            },
+
+            async finishQuiz() {
+                AppData.learningState.screen = 'result';
+                
+                const totalQuestions = EXTRACTED_QUESTIONS.length;
+                const correctCount = Object.entries(AppData.learningState.answers).filter(([questionId, answer]) => {
+                    const question = EXTRACTED_QUESTIONS.find(q => q.id == questionId);
+                    return question && answer === question.correctAnswer;
+                }).length;
+                const passed = correctCount >= 8;
+                
+                const record = {
+                    id: Date.now(),
+                    userId: AppData.currentUser.id,
+                    userName: AppData.learningState.userName,
+                    userDept: AppData.learningState.userDept,
+                    courseId: AppData.currentCourse ? AppData.currentCourse.id : null,
+                    courseTitle: AppData.currentCourse ? AppData.currentCourse.title : 'インサイダー取引規制研修',
+                    startDate: new Date().toISOString(),
+                    completedDate: new Date().toISOString(),
+                    status: 'completed',
+                    score: correctCount,
+                    totalQuestions: totalQuestions,
+                    passed: passed,
+                    answers: AppData.learningState.answers
+                };
+                
+                AppData.learningRecords.push(record);
+                await Database.save();
+                
+                if (AppData.currentUser) {
+                    await Database.clearProgress(AppData.currentUser.id);
+                }
+                
+                this.render();
+            },
+
+            async retakeQuiz() {
+                if (AppData.currentUser) {
+                    await Database.clearProgress(AppData.currentUser.id);
+                }
+                
+                AppData.learningState = {
+                    screen: 'start',
+                    slideIndex: 0,
+                    questionIndex: 0,
+                    userName: AppData.learningState.userName,
+                    userDept: AppData.learningState.userDept,
+                    answers: {},
+                    showExplanations: {}
+                };
+                this.render();
+            },
+
+            // 🆕 受講者追加機能
+            showAddLearnerModal() {
+                const modal = `
+                    <div class="modal active" onclick="if(event.target === this) this.remove()">
+                        <div class="modal-content" onclick="event.stopPropagation()">
+                            <div class="modal-header">
+                                <h2>➕ 受講者を追加</h2>
+                                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                            </div>
+                            <div id="addLearnerError"></div>
+                            <div class="form-group">
+                                <label>氏名 <span style="color: #ef4444;">*</span></label>
+                                <input type="text" id="newLearnerName" placeholder="例: 田中 太郎">
+                            </div>
+                            <div class="form-group">
+                                <label>メールアドレス <span style="color: #ef4444;">*</span></label>
+                                <input type="email" id="newLearnerEmail" placeholder="例: tanaka@example.com">
+                            </div>
+                            <div class="form-group">
+                                <label>部署 <span style="color: #ef4444;">*</span></label>
+                                <input type="text" id="newLearnerDept" placeholder="例: インベストメント部">
+                            </div>
+                            <div class="form-group">
+                                <label>ユーザー名 <span style="color: #ef4444;">*</span></label>
+                                <input type="text" id="newLearnerUsername" placeholder="例: tanaka">
+                            </div>
+                            <div class="form-group">
+                                <label>パスワード <span style="color: #ef4444;">*</span></label>
+                                <input type="password" id="newLearnerPassword" placeholder="8文字以上">
+                            </div>
+                            <div style="margin-top: 30px; display: flex; gap: 10px; justify-content: flex-end;">
+                                <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">
+                                    キャンセル
+                                </button>
+                                <button class="btn btn-success" onclick="App.addLearner()">
+                                    追加
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modal);
+            },
+
+            addLearner() {
+                const name = document.getElementById('newLearnerName').value.trim();
+                const email = document.getElementById('newLearnerEmail').value.trim();
+                const dept = document.getElementById('newLearnerDept').value.trim();
+                const username = document.getElementById('newLearnerUsername').value.trim();
+                const password = document.getElementById('newLearnerPassword').value;
+                
+                const errorDiv = document.getElementById('addLearnerError');
+                
+                // バリデーション
+                if (!name || !email || !dept || !username || !password) {
+                    errorDiv.innerHTML = '<div class="error-message">すべての項目を入力してください</div>';
+                    return;
+                }
+                
+                if (password.length < 8) {
+                    errorDiv.innerHTML = '<div class="error-message">パスワードは8文字以上で入力してください</div>';
+                    return;
+                }
+                
+                if (AppData.users.find(u => u.username === username)) {
+                    errorDiv.innerHTML = '<div class="error-message">このユーザー名は既に使用されています</div>';
+                    return;
+                }
+                
+                if (AppData.users.find(u => u.email === email)) {
+                    errorDiv.innerHTML = '<div class="error-message">このメールアドレスは既に登録されています</div>';
+                    return;
+                }
+                
+                // 新しいIDを生成（既存の最大ID + 1）
+                const maxId = Math.max(...AppData.users.map(u => u.id), 0);
+                
+                const newLearner = {
+                    id: maxId + 1,
+                    username: username,
+                    password: password,
+                    name: name,
+                    email: email,
+                    role: 'user',
+                    department: dept
+                };
+                
+                AppData.users.push(newLearner);
+                Database.save();
+                
+                // モーダルを閉じて成功メッセージ
+                document.querySelector('.modal').remove();
+                alert(`✅ 受講者を追加しました!\n\n氏名: ${name}\nユーザー名: ${username}`);
+                
+                // 画面を更新
+                this.render();
+            },
+
+            viewLearnerDetail(userId) {
+                const learner = AppData.users.find(u => u.id === userId);
+                const records = AppData.learningRecords.filter(r => r.userId === userId);
+                const progress = Database.loadProgress(userId);
+                
+                if (!learner) return;
+                
+                let progressHtml = '';
+                if (progress) {
+                    progressHtml = `
+                        <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin-bottom: 15px; border: 2px solid #f59e0b;">
+                            <h4 style="color: #92400e; margin-bottom: 10px;">⏸️ 進行中</h4>
+                            <p><strong>状態:</strong> ${progress.screen === 'training' ? '研修スライド閲覧中' : 'テスト回答中'}</p>
+                            ${progress.screen === 'training' ? 
+                                `<p><strong>進捗:</strong> スライド ${progress.slideIndex + 1} / 19</p>` :
+                                `<p><strong>進捗:</strong> ${Object.keys(progress.answers || {}).length} / 10 問回答済み</p>`
+                            }
+                            <p><strong>最終更新:</strong> ${new Date(progress.lastUpdated).toLocaleString('ja-JP')}</p>
+                        </div>
+                    `;
+                }
+                
+                let recordsHtml = '';
+                if (records.length === 0) {
+                    recordsHtml = '<p style="color: #6b7280; text-align: center; padding: 20px;">受講履歴がありません</p>';
+                } else {
+                    recordsHtml = records.map((record, index) => `
+                        <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 15px;">
+                            <h4 style="color: #1e3c72; margin-bottom: 10px;">受講記録 #${index + 1}</h4>
+                            <p><strong>コース:</strong> ${record.courseTitle}</p>
+                            <p><strong>完了日:</strong> ${new Date(record.completedDate).toLocaleString('ja-JP')}</p>
+                            <p><strong>テスト結果:</strong> <span style="color: ${record.passed ? '#10b981' : '#ef4444'}; font-weight: 600;">${record.score}点 / ${record.totalQuestions}問</span></p>
+                            <p><strong>判定:</strong> ${record.passed ? '<span style="color: #10b981;">✅ 合格</span>' : '<span style="color: #ef4444;">❌ 不合格</span>'}</p>
+                        </div>
+                    `).join('');
+                }
+                
+                const modal = `
+                    <div class="modal active" onclick="if(event.target === this) this.remove()">
+                        <div class="modal-content" onclick="event.stopPropagation()">
+                            <div class="modal-header">
+                                <h2>👤 受講者詳細</h2>
+                                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                            </div>
+                            <div style="">
+                                <h3 style="color: #1e3c72; margin-bottom: 15px;">基本情報</h3>
+                                <p><strong>氏名:</strong> ${learner.name}</p>
+                                <p><strong>部署:</strong> ${learner.department}</p>
+                                <p><strong>メール:</strong> ${learner.email}</p>
+                                <p><strong>ユーザー名:</strong> ${learner.username}</p>
+                            </div>
+                            ${progressHtml}
+                            <div>
+                                <h3 style="color: #1e3c72; margin-bottom: 15px;">受講履歴</h3>
+                                ${recordsHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modal);
+            },
+
+            viewCertificate(userId) {
+                const learner = AppData.users.find(u => u.id === userId);
+                const records = AppData.learningRecords.filter(r => r.userId === userId && r.passed);
+                
+                if (!learner || records.length === 0) {
+                    alert('修了証が見つかりません');
+                    return;
+                }
+                
+                const latestRecord = records[records.length - 1];
+                
+                const modal = `
+                    <div class="modal active" onclick="if(event.target === this) this.remove()">
+                        <div class="modal-content" onclick="event.stopPropagation()">
+                            <div class="modal-header">
+                                <h2>📜 修了証</h2>
+                                <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                            </div>
+                            <div class="certificate-container" style="margin: 0;">
+                                <div class="certificate-title">🏆 修了証</div>
+                                <div class="certificate-body">
+                                    <p style="font-size: 20px; margin-bottom: 20px;">以下の者は</p>
+                                    <div class="certificate-name">${latestRecord.userName}</div>
+                                    <p style="margin: 20px 0; line-height: 1.8;">
+                                        インサイダー取引規制における<br>
+                                        取引推奨行為に関する研修を<br>
+                                        修了したことを証明します
+                                    </p>
+                                    <p style="margin-top: 30px; color: #6b7280;">
+                                        ${new Date(latestRecord.completedDate).toLocaleDateString('ja-JP')}
+                                    </p>
+                                    <p style="margin-top: 10px; font-weight: 600;">
+                                        ${latestRecord.userDept}
+                                    </p>
+                                    <p style="margin-top: 20px; color: #6b7280; font-size: 14px;">
+                                        テスト結果: ${latestRecord.score}点 / ${latestRecord.totalQuestions}問
+                                    </p>
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin-top: 20px;">
+                                <button class="btn btn-primary" onclick="window.print()">
+                                    🖨️ 印刷
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modal);
+            },
+
+            saveDatabase() {
+                if (Database.save()) {
+                    alert('✅ データを保存しました!\n\nコース: ' + AppData.courses.length + '件\n受講記録: ' + AppData.learningRecords.length + '件');
+                } else {
+                    alert('❌ データの保存に失敗しました');
+                }
+            },
+
+            exportDatabase() {
+                const data = Database.export();
+                if (data) {
+                    const blob = new Blob([data], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `elearning_backup_${new Date().toISOString().split('T')[0]}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    alert('✅ データをエクスポートしました!');
+                } else {
+                    alert('❌ データのエクスポートに失敗しました');
+                }
+            },
+
+            importDatabase() {
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            try {
+                                if (Database.import(event.target.result)) {
+                                    alert('✅ データをインポートしました!\n\nページをリロードします。');
+                                    location.reload();
+                                } else {
+                                    alert('❌ データのインポートに失敗しました');
+                                }
+                            } catch (error) {
+                                alert('❌ ファイルの読み込みに失敗しました');
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                };
+                input.click();
+            },
+
+            clearDatabase() {
+                if (confirm('⚠️ 警告:すべてのデータを削除します。\n\n本当に削除しますか?')) {
+                    if (confirm('本当によろしいですか?この操作は取り消せません。')) {
+                        Database.clear();
+                        alert('✅ データをクリアしました\n\nページをリロードします。');
+                        location.reload();
+                    }
+                }
+            }
+        };
+
+        // アプリ起動
+        document.addEventListener('DOMContentLoaded', () => {
+            App.init();
+        });
+    </script>
+</body>
+</html>
