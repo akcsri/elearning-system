@@ -862,28 +862,10 @@
             API_BASE: window.location.origin,
             
             async save() {
-                try {
-                    const dataToSave = {
-                        users: AppData.users,
-                        courses: AppData.courses,
-                        learningRecords: AppData.learningRecords,
-                        lastUpdated: new Date().toISOString()
-                    };
-                    const response = await fetch(`${this.API_BASE}/api/data`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(dataToSave)
-                    });
-                    const result = await response.json();
-                    if (result.success) {
-                        console.log('✅ データを保存しました', new Date().toLocaleTimeString());
-                        return true;
-                    }
-                    return false;
-                } catch (error) {
-                    console.error('❌ データ保存エラー:', error);
-                    return false;
-                }
+                // 自動保存は無効化
+                // 学習記録は saveLearningRecord() で個別保存される
+                console.log('💾 [自動保存] 無効化されています');
+                return true;
             },
             
             async load() {
@@ -1242,11 +1224,12 @@
             async init() {
                 await Database.load();
                 
-                setInterval(() => {
-                    if (AppData.courses.length > 0 || AppData.learningRecords.length > 0) {
-                        Database.save();
-                    }
-                }, 5000);
+                // 自動保存は無効化
+                // setInterval(() => {
+                //     if (AppData.courses.length > 0 || AppData.learningRecords.length > 0) {
+                //         Database.save();
+                //     }
+                // }, 5000);
                 
                 setInterval(() => {
                     if (AppData.currentUser && 
