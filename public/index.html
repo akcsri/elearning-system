@@ -1494,15 +1494,70 @@
             },
 
             renderCourses() {
+    if (AppData.courses.length === 0) {
+        return `
+            <div style="text-align: center; padding: 60px;">
+                <div style="font-size: 64px; margin-bottom: 20px;">📚</div>
+                <h3>コースがまだありません</h3>
+                <p style="color: #6b7280; margin-bottom: 20px;">PowerPointファイルをインポートしてコースを作成してください</p>
+                <button class="btn btn-primary" onclick="App.switchTab('import')">
+                    最初のコースをインポート
+                </button>
+            </div>
+        `;
+    }
+
+    return `
+        <div class="section-header">
+            <h2>コース管理</h2>
+            <button class="btn btn-primary" onclick="App.switchTab('import')">
+                ➕ 新規インポート
+            </button>
+        </div>
+
+        ${AppData.courses.map(course => `
+            <div class="course-card">
+                <h3 style="color: #1e3c72; margin-bottom: 10px;">${course.title || 'インサイダー取引規制研修'}</h3>
+                <p style="color: #6b7280; margin-bottom: 15px;">${course.description || 'PEファンド従業員向けeラーニング研修'}</p>
+                
+                <div class="course-structure">
+                    <h4 style="margin-bottom: 15px;">コース構成</h4>
+                    
+                    <div class="structure-item">
+                        <span class="section-badge badge-training">研修</span>
+                        <span>${course.slideImages ? course.slideImages.length : 0} スライド</span>
+                        ${course.slideImages && course.slideImages.length > 0 ? 
+                            `<span style="color: #10b981; margin-left: 10px;">✅ ${course.slideImages.length}枚の画像</span>` : 
+                            `<span style="color: #f59e0b; margin-left: 10px;">⚠️ 画像なし</span>`}
+                    </div>
+
+                    <div class="structure-item">
+                        <span class="section-badge badge-test">テスト</span>
+                        <span>${course.quiz ? course.quiz.length : 0} 問</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary btn-small" onclick="App.startLearning(${course.id})">
+                        🎓 受講する
+                    </button>
+                    <button class="btn btn-danger btn-small" onclick="App.deleteCourse(${course.id})">
+                        🗑️ 削除
+                    </button>
+                </div>
+            </div>
+        `).join('')}
+    `;
+}
+
+            renderCourses() {
                 if (AppData.courses.length === 0) {
                     return `
-                        <div class="section-header">
-                            <h2>コース管理</h2>
-                        </div>
                         <div style="text-align: center; padding: 60px;">
                             <div style="font-size: 64px; margin-bottom: 20px;">📚</div>
                             <h3>コースがまだありません</h3>
-                            <button class="btn btn-primary" style="margin-top: 20px;" onclick="App.switchTab('import')">
+                            <p style="color: #6b7280; margin-bottom: 20px;">PowerPointファイルをインポートしてコースを作成してください</p>
+                            <button class="btn btn-primary" onclick="App.switchTab('import')">
                                 最初のコースをインポート
                             </button>
                         </div>
@@ -1519,23 +1574,23 @@
 
                     ${AppData.courses.map(course => `
                         <div class="course-card">
-                            <h3 style="color: #1e3c72; margin-bottom: 10px;">${course.title}</h3>
-                            <p style="color: #6b7280; margin-bottom: 15px;">${course.subtitle || ''}</p>
+                            <h3 style="color: #1e3c72; margin-bottom: 10px;">${course.title || 'インサイダー取引規制研修'}</h3>
+                            <p style="color: #6b7280; margin-bottom: 15px;">${course.description || 'PEファンド従業員向けeラーニング研修'}</p>
                             
                             <div class="course-structure">
                                 <h4 style="margin-bottom: 15px;">コース構成</h4>
                                 
                                 <div class="structure-item">
                                     <span class="section-badge badge-training">研修</span>
-                                    <span>${course.sections.training.slideCount} スライド</span>
+                                    <span>${course.slideImages ? course.slideImages.length : 0} スライド</span>
                                     ${course.slideImages && course.slideImages.length > 0 ? 
                                         `<span style="color: #10b981; margin-left: 10px;">✅ ${course.slideImages.length}枚の画像</span>` : 
-                                        `<span style="color: #f59e0b; margin-left: 10px;">⚠️ デモ用</span>`}
+                                        `<span style="color: #f59e0b; margin-left: 10px;">⚠️ 画像なし</span>`}
                                 </div>
 
                                 <div class="structure-item">
                                     <span class="section-badge badge-test">テスト</span>
-                                    <span>${course.sections.test.questions.length} 問</span>
+                                    <span>${course.quiz ? course.quiz.length : 0} 問</span>
                                 </div>
                             </div>
 
@@ -1550,7 +1605,7 @@
                         </div>
                     `).join('')}
                 `;
-            },
+            }
 
             renderImport() {
                 return `
