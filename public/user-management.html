@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>受講者管理 - eラーニングシステム</title>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAA0ElEQVRYhe2WQQqDMBBF3yR4/9vYA3gLb+MBXLmQbhQhkMkkVloI/wFBnPn5M4kxaRQAAAAA8C8MAc5bXyNwDnAJ8PKT/7gGOFu9CwFeCXBL8lKAs9V7EeAdACsB3gGwEuAdACsB3gGwEuAdACsB3gGwEuAdACsB3gGwEuAdACsB3gGwEuDdAPcGONv+LQBXq/cmwDsBVgK8E2AlwDsBVgK8E2AlwDsBVgK8E2AlwDsBVgK8E2AlwDsBVgK8G+CXtb8R4Bxgf1v9b0AAAAAA/MwbqfYcMcE7EFIAAAAASUVORK5CYII=">
     <style>
         * {
             margin: 0;
@@ -440,6 +441,21 @@
     </div>
 
     <script>
+        // ブラウザ拡張機能のエラーを抑制
+        window.addEventListener('error', function(e) {
+            if (e.message && e.message.includes('message channel closed')) {
+                e.preventDefault();
+                return true;
+            }
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            if (e.reason && e.reason.message && e.reason.message.includes('message channel closed')) {
+                e.preventDefault();
+                return true;
+            }
+        });
+
         const API_BASE = window.location.hostname === 'localhost' 
             ? 'http://localhost:3000/api'
             : '/api';
@@ -449,6 +465,8 @@
 
         // ページ読み込み時
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('🚀 受講者管理ページ起動');
+            console.log('📡 API Base:', API_BASE);
             await loadUsers();
             setupSearchFilter();
         });
@@ -456,20 +474,31 @@
         // 受講者一覧を読み込み
         async function loadUsers() {
             try {
+                console.log('📥 受講者データを読み込み中...');
                 document.getElementById('loadingIndicator').style.display = 'block';
                 document.getElementById('usersTableContainer').style.display = 'none';
                 document.getElementById('emptyState').style.display = 'none';
 
-                const response = await fetch(`${API_BASE}/users`);
-                if (!response.ok) throw new Error('受講者データの取得に失敗しました');
+                const url = `${API_BASE}/users`;
+                console.log('🌐 API URL:', url);
+                
+                const response = await fetch(url);
+                console.log('📊 レスポンスステータス:', response.status);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ APIエラー:', errorText);
+                    throw new Error(`受講者データの取得に失敗しました (${response.status})`);
+                }
                 
                 allUsers = await response.json();
+                console.log('✅ 受講者データ取得成功:', allUsers.length, '人');
                 displayUsers(allUsers);
                 updateStats();
 
             } catch (error) {
-                console.error('エラー:', error);
-                alert('受講者データの読み込みに失敗しました: ' + error.message);
+                console.error('❌ 受講者データ読み込みエラー:', error);
+                alert('受講者データの読み込みに失敗しました: ' + error.message + '\n\nサーバーが起動しているか確認してください。');
             } finally {
                 document.getElementById('loadingIndicator').style.display = 'none';
             }

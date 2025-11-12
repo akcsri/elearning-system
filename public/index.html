@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>インサイダー取引規制 eラーニングシステム</title>
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAA0ElEQVRYhe2WQQqDMBBF3yR4/9vYA3gLb+MBXLmQbhQhkMkkVloI/wFBnPn5M4kxaRQAAAAA8C8MAc5bXyNwDnAJ8PKT/7gGOFu9CwFeCXBL8lKAs9V7EeAdACsB3gGwEuAdACsB3gGwEuAdACsB3gGwEuAdACsB3gGwEuAdACsB3gGwEuDdAPcGONv+LQBXq/cmwDsBVgK8E2AlwDsBVgK8E2AlwDsBVgK8E2AlwDsBVgK8E2AlwDsBVgK8G+CXtb8R4Bxgf1v9b0AAAAAA/MwbqfYcMcE7EFIAAAAASUVORK5CYII=">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * {
@@ -524,11 +525,31 @@
 
     <script>
         // ===========================================
+        // ブラウザ拡張機能のエラーを抑制
+        // ===========================================
+        window.addEventListener('error', function(e) {
+            if (e.message && e.message.includes('message channel closed')) {
+                e.preventDefault();
+                return true;
+            }
+        });
+
+        window.addEventListener('unhandledrejection', function(e) {
+            if (e.reason && e.reason.message && e.reason.message.includes('message channel closed')) {
+                e.preventDefault();
+                return true;
+            }
+        });
+
+        // ===========================================
         // 🔧 PostgreSQL API設定
         // ===========================================
         const API_BASE = window.location.hostname === 'localhost' 
             ? 'http://localhost:3000/api'
             : '/api';
+
+        console.log('🚀 eラーニングシステム起動');
+        console.log('📡 API Base:', API_BASE);
 
         // ===========================================
         // データ管理（PostgreSQL API使用）
@@ -536,11 +557,28 @@
         const Database = {
             async load() {
                 try {
-                    const response = await fetch(`${API_BASE}/data`);
-                    if (!response.ok) throw new Error('データの読み込みに失敗しました');
-                    return await response.json();
+                    console.log('📥 データを読み込み中...');
+                    const url = `${API_BASE}/data`;
+                    console.log('🌐 API URL:', url);
+                    
+                    const response = await fetch(url);
+                    console.log('📊 レスポンスステータス:', response.status);
+                    
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error('❌ APIエラー:', errorText);
+                        throw new Error(`データの読み込みに失敗しました (${response.status})`);
+                    }
+                    
+                    const data = await response.json();
+                    console.log('✅ データ読み込み成功');
+                    console.log('  - ユーザー:', data.users?.length || 0, '人');
+                    console.log('  - コース:', data.courses?.length || 0, '件');
+                    console.log('  - 学習記録:', data.learningRecords?.length || 0, '件');
+                    
+                    return data;
                 } catch (error) {
-                    console.error('データ読み込みエラー:', error);
+                    console.error('❌ データ読み込みエラー:', error);
                     return null;
                 }
             },
