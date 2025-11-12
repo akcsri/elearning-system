@@ -1066,8 +1066,12 @@
             },
 
             showQuizQuestion() {
+                console.log('📝 クイズ画面を表示:', AppData.currentQuestionIndex + 1);
                 const quiz = AppData.currentCourse.quiz;
                 const question = quiz[AppData.currentQuestionIndex];
+                console.log('❓ 質問:', question.question);
+                console.log('📊 現在の回答状態:', AppData.userAnswers);
+                
                 const totalQuestions = quiz.length;
                 const progress = ((AppData.currentQuestionIndex + 1) / totalQuestions) * 100;
 
@@ -1137,7 +1141,9 @@
             },
 
             selectAnswer(answerIndex) {
+                console.log('🖱️ 回答を選択:', answerIndex, '問題:', AppData.currentQuestionIndex);
                 AppData.userAnswers[AppData.currentQuestionIndex] = answerIndex;
+                console.log('📝 現在の回答:', AppData.userAnswers);
                 this.showQuizQuestion();
             },
 
@@ -1534,7 +1540,17 @@
         // ===========================================
         // アプリケーション起動
         // ===========================================
+        
+        // グローバルスコープにエクスポート（HTMLのonclick属性から使用するため）
+        window.App = App;
+        window.AdminScreen = AdminScreen;
+        window.UserScreen = UserScreen;
+        
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('✅ グローバル関数をエクスポートしました');
+            console.log('   - window.App:', typeof window.App);
+            console.log('   - window.AdminScreen:', typeof window.AdminScreen);
+            console.log('   - window.UserScreen:', typeof window.UserScreen);
             App.init();
         });
     </script>
