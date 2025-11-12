@@ -1297,21 +1297,18 @@
                 });
 
                 const score = correctCount;
-                const passingScore = AppData.currentCourse.passing_score || 70;
                 
-                // passing_scoreがパーセンテージ(70など)の場合、実際の必要正解数に変換
-                const requiredScore = passingScore > totalQuestions 
-                    ? Math.ceil((passingScore / 100) * totalQuestions)  // 70% = 10問中7問
-                    : passingScore;  // 直接の問題数
-                
+                // 合格判定: 70%以上で合格
+                const passingPercentage = 70;
+                const requiredScore = Math.ceil((passingPercentage / 100) * totalQuestions);
                 const passed = score >= requiredScore;
                 const timeSpent = Math.floor((Date.now() - AppData.startTime) / 1000);
 
                 console.log('📈 採点結果:', {
                     score: score,
                     total: totalQuestions,
-                    passingScore: passingScore,
                     requiredScore: requiredScore,
+                    passingPercentage: passingPercentage,
                     passed: passed,
                     timeSpent: timeSpent
                 });
@@ -1342,18 +1339,11 @@
                     console.error('❌ 学習記録の保存に失敗しました');
                 }
 
-                this.showQuizResult(score, totalQuestions, passed, passingScore, requiredScore);
+                this.showQuizResult(score, totalQuestions, passed, requiredScore);
             },
 
-            showQuizResult(score, totalQuestions, passed, passingScore, requiredScore) {
+            showQuizResult(score, totalQuestions, passed, requiredScore) {
                 const percentage = Math.round((score / totalQuestions) * 100);
-                
-                // requiredScoreが渡されていない場合は計算
-                if (!requiredScore) {
-                    requiredScore = passingScore > totalQuestions 
-                        ? Math.ceil((passingScore / 100) * totalQuestions)
-                        : passingScore;
-                }
 
                 const html = `
                     <div class="app-container">
@@ -1387,7 +1377,7 @@
                                 </p>
                                 
                                 <p style="margin-top: 20px; font-size: 16px; color: #6b7280;">
-                                    合格ライン: ${requiredScore}問以上正解 (${passingScore > totalQuestions ? passingScore + '%' : ''})
+                                    合格ライン: ${requiredScore}問以上正解 (70%以上)
                                 </p>
                             </div>
                             
