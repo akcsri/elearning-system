@@ -1224,6 +1224,40 @@
             async init() {
                 await Database.load();
                 
+                // ページリロード時の自動復元
+                const savedUserId = localStorage.getItem('currentUserId');
+                if (savedUserId) {
+                    const user = AppData.users.find(u => u.id === parseInt(savedUserId));
+                    if (user) {
+                        AppData.currentUser = user;
+                        
+                        // 各コースの進捗を確認
+                        for (const course of AppData.courses) {
+                            AppData.currentCourse = course;
+                            const progress = await Database.loadProgress(user.id);
+                            if (progress && progress.courseId) {
+                                // 進捗が見つかった場合
+                                this.currentView = 'learning';
+                                AppData.learningState = {
+                                    screen: progress.screen,
+                                    slideIndex: progress.slideIndex,
+                                    questionIndex: progress.questionIndex,
+                                    userName: progress.userName || '',
+                                    userDept: progress.userDept || '',
+                                    answers: progress.answers || {},
+                                    showExplanations: {}
+                                };
+                                break; // 最初に見つかった進捗を使用
+                            }
+                        }
+                        
+                        // 進捗が見つからない場合は最初のコースを設定
+                        if (!AppData.currentCourse && AppData.courses.length > 0) {
+                            AppData.currentCourse = AppData.courses[0];
+                        }
+                    }
+                }
+                
                 // 自動保存は無効化
                 // setInterval(() => {
                 //     if (AppData.courses.length > 0 || AppData.learningRecords.length > 0) {
@@ -1983,6 +2017,7 @@
 
                 if (user) {
                     AppData.currentUser = user;
+                    localStorage.setItem('currentUserId', user.id);
                     const progress = await Database.loadProgress(user.id);
                     if (progress) {
                         AppData.savedProgress = progress;
@@ -2012,6 +2047,7 @@
                         await Database.saveProgress(AppData.currentUser.id);
                     }
                     
+                    localStorage.removeItem('currentUserId');
                     AppData.currentUser = null;
                     AppData.savedProgress = null;
                     this.currentView = 'login';
