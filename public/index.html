@@ -1297,13 +1297,21 @@
                 });
 
                 const score = correctCount;
-                const passingScore = AppData.currentCourse.passing_score || 7;
-                const passed = score >= passingScore;
+                const passingScore = AppData.currentCourse.passing_score || 70;
+                
+                // passing_scoreがパーセンテージ(70など)の場合、実際の必要正解数に変換
+                const requiredScore = passingScore > totalQuestions 
+                    ? Math.ceil((passingScore / 100) * totalQuestions)  // 70% = 10問中7問
+                    : passingScore;  // 直接の問題数
+                
+                const passed = score >= requiredScore;
                 const timeSpent = Math.floor((Date.now() - AppData.startTime) / 1000);
 
                 console.log('📈 採点結果:', {
                     score: score,
                     total: totalQuestions,
+                    passingScore: passingScore,
+                    requiredScore: requiredScore,
                     passed: passed,
                     timeSpent: timeSpent
                 });
@@ -1334,11 +1342,18 @@
                     console.error('❌ 学習記録の保存に失敗しました');
                 }
 
-                this.showQuizResult(score, totalQuestions, passed, passingScore);
+                this.showQuizResult(score, totalQuestions, passed, passingScore, requiredScore);
             },
 
-            showQuizResult(score, totalQuestions, passed, passingScore) {
+            showQuizResult(score, totalQuestions, passed, passingScore, requiredScore) {
                 const percentage = Math.round((score / totalQuestions) * 100);
+                
+                // requiredScoreが渡されていない場合は計算
+                if (!requiredScore) {
+                    requiredScore = passingScore > totalQuestions 
+                        ? Math.ceil((passingScore / 100) * totalQuestions)
+                        : passingScore;
+                }
 
                 const html = `
                     <div class="app-container">
@@ -1372,7 +1387,7 @@
                                 </p>
                                 
                                 <p style="margin-top: 20px; font-size: 16px; color: #6b7280;">
-                                    合格ライン: ${passingScore}問以上正解
+                                    合格ライン: ${requiredScore}問以上正解 (${passingScore > totalQuestions ? passingScore + '%' : ''})
                                 </p>
                             </div>
                             

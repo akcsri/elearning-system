@@ -145,6 +145,21 @@
             color: white;
         }
 
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .badge-warning {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .badge-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
         .actions {
             display: flex;
             gap: 10px;
@@ -335,7 +350,7 @@
                 </div>
                 <div class="stat-card">
                     <h3 id="userCount">-</h3>
-                    <p>一般ユーザー</p>
+                    <p>修了者数</p>
                 </div>
             </div>
 
@@ -347,6 +362,9 @@
                 <div>
                     <button class="btn btn-secondary" onclick="location.href='index.html'">
                         ← 管理画面に戻る
+                    </button>
+                    <button class="btn btn-secondary" onclick="loadUsers()">
+                        🔄 更新
                     </button>
                     <button class="btn btn-primary" onclick="openAddModal()">
                         ➕ 新規受講者追加
@@ -368,6 +386,7 @@
                             <th>メールアドレス</th>
                             <th>部署</th>
                             <th>役割</th>
+                            <th>受講ステータス</th>
                             <th>操作</th>
                         </tr>
                     </thead>
@@ -461,6 +480,7 @@
             : '/api';
 
         let allUsers = [];
+        let learningRecords = [];
         let editingUserId = null;
 
         // ページ読み込み時
@@ -469,6 +489,12 @@
             console.log('📡 API Base:', API_BASE);
             await loadUsers();
             setupSearchFilter();
+            
+            // 30秒ごとに自動更新
+            setInterval(async () => {
+                console.log('🔄 データを自動更新中...');
+                await loadUsers();
+            }, 30000); // 30秒
         });
 
         // 受講者一覧を読み込み
@@ -479,7 +505,7 @@
                 document.getElementById('usersTableContainer').style.display = 'none';
                 document.getElementById('emptyState').style.display = 'none';
 
-                const url = `${API_BASE}/users`;
+                const url = `${API_BASE}/data`;
                 console.log('🌐 API URL:', url);
                 
                 const response = await fetch(url);
@@ -491,8 +517,14 @@
                     throw new Error(`受講者データの取得に失敗しました (${response.status})`);
                 }
                 
-                allUsers = await response.json();
-                console.log('✅ 受講者データ取得成功:', allUsers.length, '人');
+                const data = await response.json();
+                allUsers = data.users || [];
+                learningRecords = data.learningRecords || [];
+                
+                console.log('✅ データ取得成功');
+                console.log('  - 受講者:', allUsers.length, '人');
+                console.log('  - 学習記録:', learningRecords.length, '件');
+                
                 displayUsers(allUsers);
                 updateStats();
 
@@ -517,30 +549,53 @@
             document.getElementById('usersTableContainer').style.display = 'block';
             document.getElementById('emptyState').style.display = 'none';
 
-            tbody.innerHTML = users.map(user => `
-                <tr>
-                    <td>${user.id}</td>
-                    <td>${user.name}</td>
-                    <td>${user.username}</td>
-                    <td>${user.email}</td>
-                    <td>${user.department || '-'}</td>
-                    <td>
-                        <span class="badge ${user.role === 'admin' ? 'badge-admin' : 'badge-user'}">
-                            ${user.role === 'admin' ? '管理者' : '一般ユーザー'}
-                        </span>
-                    </td>
-                    <td>
-                        <div class="actions">
-                            <button class="btn btn-primary" onclick="openEditModal(${user.id})">
-                                編集
-                            </button>
-                            <button class="btn btn-danger" onclick="deleteUser(${user.id}, '${user.name}')">
-                                削除
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = users.map(user => {
+                // 学習記録から受講ステータスを判定
+                const userRecords = learningRecords.filter(r => r.userId === user.id || r.user_id === user.id);
+                const hasPassedRecord = userRecords.some(r => r.passed);
+                
+                let statusBadge, statusText;
+                if (hasPassedRecord) {
+                    statusBadge = 'badge-success';
+                    statusText = '✅ 修了';
+                } else if (userRecords.length > 0) {
+                    statusBadge = 'badge-warning';
+                    statusText = '📝 受講済(不合格)';
+                } else {
+                    statusBadge = 'badge-secondary';
+                    statusText = '⏳ 未受講';
+                }
+                
+                return `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td>${user.name}</td>
+                        <td>${user.username}</td>
+                        <td>${user.email}</td>
+                        <td>${user.department || '-'}</td>
+                        <td>
+                            <span class="badge ${user.role === 'admin' ? 'badge-admin' : 'badge-user'}">
+                                ${user.role === 'admin' ? '管理者' : '一般ユーザー'}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge ${statusBadge}">
+                                ${statusText}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="actions">
+                                <button class="btn btn-primary" onclick="openEditModal(${user.id})">
+                                    編集
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteUser(${user.id}, '${user.name}')">
+                                    削除
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         // 統計情報を更新
@@ -549,9 +604,15 @@
             const adminCount = allUsers.filter(u => u.role === 'admin').length;
             const userCount = allUsers.filter(u => u.role === 'user').length;
 
+            // 修了者数を計算
+            const completedUsers = allUsers.filter(u => {
+                const userRecords = learningRecords.filter(r => (r.userId === u.id || r.user_id === u.id) && r.passed);
+                return userRecords.length > 0;
+            }).length;
+
             document.getElementById('totalUsers').textContent = totalUsers;
             document.getElementById('adminCount').textContent = adminCount;
-            document.getElementById('userCount').textContent = userCount;
+            document.getElementById('userCount').textContent = completedUsers; // 修了者数を表示
         }
 
         // 検索フィルター設定
