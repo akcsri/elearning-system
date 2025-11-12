@@ -1,53 +1,67 @@
-﻿---
-name: Resume Learning Feature Fix
-about: Auto-restore learning progress on page reload
-title: '[Bug Fix] Page reload loses learning progress'
+---
+name: 続きから再開機能の修正
+about: ページリロード時に学習進捗が自動復元されない問題
+title: '[Bug Fix] ページリロード時に続きから自動再開されない'
 labels: bug, enhancement
 assignees: ''
 
 ---
 
-## Problem Description
+## 🐛 問題の説明
 
-When users reload the page (F5), login state and learning progress are lost.
+ページをリロード（F5）すると、ログイン状態と学習進捗が失われる。
 
-## Steps to Reproduce
+## 📋 再現手順
 
-1. Login (e.g., user1 / user1123)
-2. Progress through several slides
-3. Reload page (F5)
-4. User is returned to login screen
+1. user1でログイン (user1 / user1123)
+2. スライドを5枚進める
+3. ページリロード (F5)
+4. ❌ ログイン画面に戻される
 
-## Proposed Solution
+## 💡 提案される解決策
 
-Modify `public/index.html`:
+`public/index.html` を修正：
 ```javascript
-// Add to App.init()
+// 1. App.init() に追加
 const savedUserId = localStorage.getItem('currentUserId');
 if (savedUserId) {
     const user = AppData.users.find(u => u.id === parseInt(savedUserId));
     if (user) {
         AppData.currentUser = user;
-        // Restore progress...
+        const progress = await Database.loadProgress(user.id);
+        if (progress && progress.course_id) {
+            const course = AppData.courses.find(c => c.id === progress.course_id);
+            if (course) {
+                AppData.currentCourse = course;
+                this.currentView = 'learning';
+                AppData.learningState = {
+                    screen: progress.quiz_started ? 'quiz' : 'training',
+                    slideIndex: progress.current_slide || 0,
+                    questionIndex: 0,
+                    answers: progress.quiz_answers || {},
+                    showExplanations: {}
+                };
+            }
+        }
     }
 }
 
-// Add to App.login()
+// 2. App.login() に追加
 localStorage.setItem('currentUserId', user.id);
 
-// Add to App.logout()
+// 3. App.logout() に追加
 localStorage.removeItem('currentUserId');
 ```
 
-## Acceptance Criteria
+## ✅ 受け入れ基準
 
-- [ ] Login state is automatically restored on page reload
-- [ ] Learning screen shows the correct slide
-- [ ] Logout clears localStorage
+- [ ] ページリロード時、自動的にログイン状態が復元される
+- [ ] 学習画面に戻り、続きのスライドが表示される
+- [ ] ログアウト後は自動復元されない
 
-## Test Steps
+## 🧪 テスト手順
 
-1. Login as user1
-2. Progress to slide 5
-3. Reload page (F5)
-4. Verify slide 5 is displayed automatically
+1. user1でログイン
+2. スライド5まで進める
+3. F5でリロード
+4. ✅ 自動的にスライド5が表示されることを確認
