@@ -1,105 +1,84 @@
 const { Pool } = require('pg');
 
-// データベース接続プールの作成
+// PostgreSQL接続設定
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? {
+    ssl: process.env.DATABASE_URL?.includes('localhost') ? false : {
         rejectUnauthorized: false
-    } : false
+    }
 });
 
-// データベース初期化
+// データベーステーブルの作成
 async function initializeDatabase() {
     const client = await pool.connect();
     
     try {
-        console.log('🔄 データベースを初期化しています...');
+        console.log('📊 データベースを初期化しています...');
         
-        // usersテーブル
+        // テーブル作成
         await client.query(`
             CREATE TABLE IF NOT EXISTS users (
                 id SERIAL PRIMARY KEY,
-                username VARCHAR(255) UNIQUE NOT NULL,
+                username VARCHAR(100) UNIQUE NOT NULL,
                 password VARCHAR(255) NOT NULL,
-                name VARCHAR(255) NOT NULL,
+                name VARCHAR(100) NOT NULL,
                 email VARCHAR(255) UNIQUE NOT NULL,
-                role VARCHAR(50) NOT NULL DEFAULT 'user',
-                department VARCHAR(255),
+                role VARCHAR(20) DEFAULT 'user',
+                department VARCHAR(100),
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+            );
 
-        // coursesテーブル
-        await client.query(`
             CREATE TABLE IF NOT EXISTS courses (
                 id SERIAL PRIMARY KEY,
                 title VARCHAR(255) NOT NULL,
                 description TEXT,
-                slides JSONB DEFAULT '[]',
-                quiz JSONB DEFAULT '[]',
+                slides JSONB,
+                quiz JSONB,
                 passing_score INTEGER DEFAULT 70,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-        `);
+            );
 
-        // learning_recordsテーブル
-        await client.query(`
             CREATE TABLE IF NOT EXISTS learning_records (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                 course_id INTEGER REFERENCES courses(id) ON DELETE CASCADE,
-                score INTEGER,
+                score INTEGER NOT NULL,
                 passed BOOLEAN DEFAULT FALSE,
                 completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                answers JSONB DEFAULT '[]',
-                time_spent INTEGER DEFAULT 0,
-                UNIQUE(user_id, course_id, completed_at)
-            )
-        `);
+                answers JSONB,
+                time_spent INTEGER DEFAULT 0
+            );
 
-        // progressテーブル（中断・再開用）
-        await client.query(`
             CREATE TABLE IF NOT EXISTS progress (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
                 course_id INTEGER,
                 current_slide INTEGER DEFAULT 0,
                 quiz_started BOOLEAN DEFAULT FALSE,
-                quiz_answers JSONB DEFAULT '[]',
+                quiz_answers JSONB,
                 expires_at TIMESTAMP,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 UNIQUE(user_id, course_id)
-            )
+            );
         `);
 
-        // インデックスの作成
-        await client.query(`
-            CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-            CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-            CREATE INDEX IF NOT EXISTS idx_learning_records_user_id ON learning_records(user_id);
-            CREATE INDEX IF NOT EXISTS idx_learning_records_course_id ON learning_records(course_id);
-            CREATE INDEX IF NOT EXISTS idx_progress_user_id ON progress(user_id);
-        `);
-
-        // デフォルトユーザーの作成（存在しない場合のみ）
-        const userCheck = await client.query('SELECT COUNT(*) FROM users WHERE username = $1', ['admin']);
-        
+        // デフォルトユーザーを確認・作成
+        const userCheck = await client.query('SELECT COUNT(*) FROM users');
         if (parseInt(userCheck.rows[0].count) === 0) {
-            console.log('📝 デフォルトユーザーを作成しています...');
-            
+            console.log('デフォルトユーザーを作成しています...');
             const defaultUsers = [
-                { username: 'admin', password: 'admin123', name: '金子 明彦', email: 'akihiko.kaneko@csri-japan.com', role: 'admin', department: 'オペレーションズ部' },
+                { username: 'admin', password: 'admin123', name: '管理者', email: 'admin@example.com', role: 'admin', department: 'オペレーションズ部' },
                 { username: 'user1', password: 'user1123', name: '前田 拓', email: 'taku.maeda@csri-japan.com', role: 'user', department: 'インベストメント部' },
                 { username: 'user2', password: 'user2123', name: '藤森 義明', email: 'yoshiaki.fujimori@csri-japan.com', role: 'user', department: 'インベストメント部' },
-                { username: 'user3', password: 'user3123', name: '堀内 駿太郎', email: 'shuntaro.horiuchi@csri-japan.com', role: 'user', department: 'インベストメント部' },
-                { username: 'user4', password: 'user4123', name: '髙橋 邦比呂', email: 'kunihiro.takahashi@csri-japan.com', role: 'user', department: 'インベストメント部' },
-                { username: 'user5', password: 'user5123', name: '金井 駿太朗', email: 'shuntaro.kanai@csri-japan.com', role: 'user', department: 'インベストメント部' },
-                { username: 'user6', password: 'user6123', name: '塩谷 輝', email: 'hikaru.shioya@csri-japan.com', role: 'user', department: 'インベストメント部' },
-                { username: 'user7', password: 'user7123', name: '嶋﨑 江美', email: 'emi.shimazaki@csri-japan.com', role: 'user', department: 'インベストメント部' },
-                { username: 'user8', password: 'user8123', name: '吉田 愛美', email: 'manami.yoshida@csri-japan.com', role: 'user', department: 'オペレーションズ部' },
+                { username: 'user3', password: 'user3123', name: '村上 昌克', email: 'masakatsu.murakami@csri-japan.com', role: 'user', department: 'インベストメント部' },
+                { username: 'user4', password: 'user4123', name: '横山 健一', email: 'kenichi.yokoyama@csri-japan.com', role: 'user', department: 'インベストメント部' },
+                { username: 'user5', password: 'user5123', name: '大塚 弘樹', email: 'hiroki.otsuka@csri-japan.com', role: 'user', department: 'インベストメント部' },
+                { username: 'user6', password: 'user6123', name: '脇野 尚志', email: 'hisashi.wakino@csri-japan.com', role: 'user', department: 'インベストメント部' },
+                { username: 'user7', password: 'user7123', name: '松林 明', email: 'akira.matsubayashi@csri-japan.com', role: 'user', department: 'インベストメント部' },
+                { username: 'user8', password: 'user8123', name: '上野 祐一郎', email: 'yuichiro.ueno@csri-japan.com', role: 'user', department: 'インベストメント部' },
                 { username: 'user9', password: 'user9123', name: '金子 明彦', email: 'akihiko.kaneko2@csri-japan.com', role: 'user', department: 'オペレーションズ部' },
                 { username: 'user10', password: 'user10123', name: '川端 真至', email: 'shinji.kawahata@csri-japan.com', role: 'user', department: 'オペレーションズ部' }
             ];
@@ -231,15 +210,70 @@ async function deleteCourse(id) {
     return true;
 }
 
-// 学習記録取得（全て）
+// 🔧 修正: 学習記録取得（全て） - JOINでユーザーとコース情報を含める
 async function getLearningRecords() {
-    const result = await pool.query('SELECT * FROM learning_records ORDER BY completed_at DESC');
+    const result = await pool.query(`
+        SELECT 
+            lr.id,
+            lr.user_id as "userId",
+            lr.course_id as "courseId",
+            lr.score,
+            lr.passed,
+            lr.completed_at as "completedAt",
+            lr.answers,
+            lr.time_spent as "timeSpent",
+            u.name as "userName",
+            u.department as "userDept",
+            c.title as "courseTitle",
+            CASE 
+                WHEN lr.passed = true THEN 'completed'
+                ELSE 'failed'
+            END as status,
+            lr.score as "correctCount",
+            CASE 
+                WHEN c.quiz IS NOT NULL THEN jsonb_array_length(c.quiz)
+                ELSE 10
+            END as "totalQuestions",
+            lr.completed_at as "completedDate"
+        FROM learning_records lr
+        LEFT JOIN users u ON lr.user_id = u.id
+        LEFT JOIN courses c ON lr.course_id = c.id
+        ORDER BY lr.completed_at DESC
+    `);
     return result.rows;
 }
 
-// 学習記録取得（ユーザーID）
+// 🔧 修正: 学習記録取得（ユーザーID） - JOINでユーザーとコース情報を含める
 async function getLearningRecordsByUserId(userId) {
-    const result = await pool.query('SELECT * FROM learning_records WHERE user_id = $1 ORDER BY completed_at DESC', [userId]);
+    const result = await pool.query(`
+        SELECT 
+            lr.id,
+            lr.user_id as "userId",
+            lr.course_id as "courseId",
+            lr.score,
+            lr.passed,
+            lr.completed_at as "completedAt",
+            lr.answers,
+            lr.time_spent as "timeSpent",
+            u.name as "userName",
+            u.department as "userDept",
+            c.title as "courseTitle",
+            CASE 
+                WHEN lr.passed = true THEN 'completed'
+                ELSE 'failed'
+            END as status,
+            lr.score as "correctCount",
+            CASE 
+                WHEN c.quiz IS NOT NULL THEN jsonb_array_length(c.quiz)
+                ELSE 10
+            END as "totalQuestions",
+            lr.completed_at as "completedDate"
+        FROM learning_records lr
+        LEFT JOIN users u ON lr.user_id = u.id
+        LEFT JOIN courses c ON lr.course_id = c.id
+        WHERE lr.user_id = $1
+        ORDER BY lr.completed_at DESC
+    `, [userId]);
     return result.rows;
 }
 
