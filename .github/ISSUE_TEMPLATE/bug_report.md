@@ -9,7 +9,7 @@ assignees: ''
 
 ## Description
 
-Describe the bug.
+A clear description of what the bug is.
 
 ## Steps to Reproduce
 
@@ -17,7 +17,10 @@ Describe the bug.
 2. Click on '....'
 3. See error
 
-## Expected vs Actual Behavior
+## Expected Behavior
 
-Expected: ...
-Actual: ...
+What you expected to happen.
+
+## Actual Behavior
+
+What actually happened.

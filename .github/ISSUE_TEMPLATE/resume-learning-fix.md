@@ -11,6 +11,13 @@ assignees: ''
 
 When users reload the page (F5), login state and learning progress are lost.
 
+## Steps to Reproduce
+
+1. Login (e.g., user1 / user1123)
+2. Progress through several slides
+3. Reload page (F5)
+4. User is returned to login screen
+
 ## Proposed Solution
 
 Modify `public/index.html`:
@@ -32,9 +39,15 @@ localStorage.setItem('currentUserId', user.id);
 localStorage.removeItem('currentUserId');
 ```
 
+## Acceptance Criteria
+
+- [ ] Login state is automatically restored on page reload
+- [ ] Learning screen shows the correct slide
+- [ ] Logout clears localStorage
+
 ## Test Steps
 
 1. Login as user1
 2. Progress to slide 5
 3. Reload page (F5)
-4. Verify slide 5 is displayed
+4. Verify slide 5 is displayed automatically
