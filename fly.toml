@@ -1,0 +1,43 @@
+# fly.toml -- elearning-system
+# https://fly.io/docs/reference/configuration/
+#
+# アプリ名は `fly apps create --generate-name --org personal` で払い出された名前を
+# ここに貼り付けてください（例: app-abc-xyz-1234）。初回デプロイ前に必ず書き換えること。
+
+app = "morning-dew-9996"
+primary_region = "nrt"          # Tokyo リージョン
+
+[build]
+  # Dockerfile を使用（同ディレクトリにある Dockerfile が自動的に選ばれる）
+
+[env]
+  PORT     = "8080"
+  TZ       = "Asia/Tokyo"
+  NODE_ENV = "production"
+
+[http_service]
+  internal_port        = 8080
+  force_https          = true
+  # ---- 常時稼働にする（Neon コンピュートのサスペンドを抑止） ----
+  auto_stop_machines   = "off"
+  auto_start_machines  = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type       = "requests"
+    hard_limit = 100
+    soft_limit = 80
+
+# ヘルスチェック: server-postgres.js が /api/health を持っている
+[[http_service.checks]]
+  interval     = "30s"
+  timeout      = "5s"
+  grace_period = "15s"
+  method       = "GET"
+  path         = "/api/health"
+
+[[vm]]
+  size     = "shared-cpu-1x"
+  memory   = "512mb"     # pg + express で十分
+  cpu_kind = "shared"
+  cpus     = 1
