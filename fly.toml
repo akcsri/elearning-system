@@ -18,10 +18,11 @@ primary_region = "nrt"          # Tokyo リージョン
 [http_service]
   internal_port        = 8080
   force_https          = true
-  # ---- 常時稼働にする（Neon コンピュートのサスペンドを抑止） ----
-  auto_stop_machines   = "off"
+  # ---- 使用時のみ起動（コスト最小化）。アクセスが来たら自動起動、
+  #      無アクセスが続いたら自動停止。コールドスタート 1〜3 秒程度 ----
+  auto_stop_machines   = "stop"
   auto_start_machines  = true
-  min_machines_running = 1
+  min_machines_running = 0
 
   [http_service.concurrency]
     type       = "requests"
@@ -38,6 +39,6 @@ primary_region = "nrt"          # Tokyo リージョン
 
 [[vm]]
   size     = "shared-cpu-1x"
-  memory   = "512mb"     # pg + express で十分
+  memory   = "256mb"     # pg + express で十分
   cpu_kind = "shared"
   cpus     = 1
