@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>コース管理 - eラーニングシステム</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);min-height:100vh;padding:20px;color:#1f2937}
+  .container{max-width:1200px;margin:0 auto;background:#fff;border-radius:15px;box-shadow:0 10px 40px rgba(0,0,0,.2);overflow:hidden}
+  .header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:24px 30px;display:flex;justify-content:space-between;align-items:center}
+  .header h1{font-size:1.6em}
+  .header .sub{opacity:.85;font-size:.95em;margin-top:4px}
+  .content{padding:24px 30px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+  .btn{padding:10px 18px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:opacity .15s,transform .05s}
+  .btn:hover{opacity:.88}
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:#1e3c72;color:#fff}
+  .btn-success{background:#16a34a;color:#fff}
+  .btn-warning{background:#d97706;color:#fff}
+  .btn-danger{background:#dc2626;color:#fff}
+  .btn-ghost{background:#e5e7eb;color:#1f2937}
+  .btn-sm{padding:6px 12px;font-size:12px}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.08)}
+  th{background:#1e3c72;color:#fff;padding:14px;text-align:left;font-weight:600;font-size:13px}
+  td{padding:14px;border-bottom:1px solid #e5e7eb;font-size:14px;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  tr:hover td{background:#f9fafb}
+  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:600;background:#e0e7ff;color:#3730a3}
+  .empty{text-align:center;padding:60px 20px;color:#6b7280}
+  /* モーダル */
+  .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:flex-start;justify-content:center;padding:24px 12px;z-index:50;overflow-y:auto}
+  .modal-bg.open{display:flex}
+  .modal{background:#fff;border-radius:12px;width:100%;max-width:880px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+  .modal header{background:#1e3c72;color:#fff;padding:18px 24px;display:flex;justify-content:space-between;align-items:center}
+  .modal header h2{font-size:1.2em}
+  .modal .close-x{background:transparent;border:none;color:#fff;font-size:1.5em;cursor:pointer}
+  .tabs{display:flex;border-bottom:2px solid #e5e7eb;background:#f9fafb}
+  .tab{padding:12px 20px;cursor:pointer;font-size:14px;font-weight:600;color:#6b7280;border-bottom:3px solid transparent;margin-bottom:-2px}
+  .tab.active{color:#1e3c72;border-bottom-color:#1e3c72;background:#fff}
+  .tab-pane{display:none;padding:22px 24px;max-height:60vh;overflow-y:auto}
+  .tab-pane.active{display:block}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;font-weight:600;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+  .field input[type=text],.field input[type=number],.field textarea,.field select{width:100%;padding:9px 11px;border:1px solid #d1d5db;border-radius:6px;font-size:14px;font-family:inherit}
+  .field textarea{resize:vertical;min-height:60px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .dropzone{border:2px dashed #9ca3af;border-radius:10px;padding:24px;text-align:center;color:#6b7280;cursor:pointer;transition:background .15s,border-color .15s}
+  .dropzone:hover,.dropzone.dragover{background:#eef2ff;border-color:#1e3c72;color:#1e3c72}
+  .slides-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:14px}
+  .slide-thumb{position:relative;border:1px solid #d1d5db;border-radius:6px;overflow:hidden;background:#f3f4f6;aspect-ratio:16/9}
+  .slide-thumb img{width:100%;height:100%;object-fit:cover}
+  .slide-thumb .num{position:absolute;top:4px;left:4px;background:rgba(30,60,114,.85);color:#fff;font-size:11px;padding:2px 7px;border-radius:6px;font-weight:700}
+  .slide-thumb .ctrls{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;background:rgba(0,0,0,.55);padding:3px 4px}
+  .slide-thumb .ctrls button{background:transparent;color:#fff;border:none;cursor:pointer;font-size:11px;padding:2px 4px}
+  .slide-thumb .ctrls button:hover{background:rgba(255,255,255,.18);border-radius:3px}
+  .quiz-card{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;margin-bottom:12px}
+  .quiz-card h4{font-size:14px;color:#1e3c72;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+  .quiz-card .opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .quiz-card .opt-line{display:flex;align-items:center;gap:6px}
+  .quiz-card .opt-line input[type=radio]{flex-shrink:0}
+  .quiz-card .opt-line input[type=text]{flex:1;padding:6px 8px;font-size:13px}
+  .quiz-card label.opt-radio{font-size:12px;font-weight:600;color:#374151;display:flex;align-items:center;gap:5px;cursor:pointer}
+  .modal footer{padding:14px 24px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;gap:10px;background:#f9fafb}
+  .modal footer .right{display:flex;gap:8px}
+  .toast{position:fixed;bottom:24px;right:24px;background:#1e3c72;color:#fff;padding:12px 18px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.25);font-size:13px;z-index:100;opacity:0;transform:translateY(10px);transition:.25s}
+  .toast.show{opacity:1;transform:translateY(0)}
+  .toast.error{background:#dc2626}
+  .toast.success{background:#16a34a}
+  .hint{font-size:11px;color:#6b7280;margin-top:4px}
+  .danger{color:#dc2626}
+  details.json-import{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;margin-bottom:14px}
+  details.json-import summary{cursor:pointer;font-size:13px;color:#1e3c72;font-weight:600}
+  details.json-import textarea{width:100%;min-height:120px;margin-top:10px;font-family:Consolas,Menlo,monospace;font-size:12px;padding:8px;border:1px solid #d1d5db;border-radius:6px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <h1>📚 コース管理</h1>
+      <div class="sub">コースの作成・編集・削除、JSON一括インポート</div>
+    </div>
+    <button class="btn btn-ghost" onclick="window.location.href='/'">← ダッシュボードへ戻る</button>
+  </div>
+  <div class="content">
+    <div class="toolbar">
+      <button class="btn btn-primary" onclick="openEditor()">+ 新規コース作成</button>
+      <button class="btn btn-success" onclick="document.getElementById('importFile').click()">📦 JSONファイルからインポート</button>
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none" onchange="onImportFile(event)">
+      <button class="btn btn-warning" onclick="loadCourses()">🔄 再読み込み</button>
+    </div>
+
+    <div id="courseTableWrap"><div class="empty">読み込み中...</div></div>
+  </div>
+</div>
+
+<!-- ===== コース編集モーダル ===== -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <header>
+      <h2 id="modalTitle">コース作成</h2>
+      <button class="close-x" onclick="closeEditor()">×</button>
+    </header>
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('basic')">基本情報</div>
+      <div class="tab" onclick="switchTab('slides')">スライド画像</div>
+      <div class="tab" onclick="switchTab('quiz')">確認テスト（10問）</div>
+      <div class="tab" onclick="switchTab('json')">JSON貼り付け</div>
+    </div>
+
+    <div class="tab-pane active" id="pane-basic">
+      <div class="field">
+        <label>タイトル <span class="danger">*</span></label>
+        <input type="text" id="f-title" placeholder="例：ディールチーム向け 投資実務コンプライアンス基礎">
+      </div>
+      <div class="field">
+        <label>説明</label>
+        <textarea id="f-desc" placeholder="受講対象、所要時間、扱う論点の概要"></textarea>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>合格点（10点満点中）</label>
+          <input type="number" id="f-pass" min="0" max="10" value="7">
+          <div class="hint">この値以上の正答数で合格判定（既定:7）</div>
+        </div>
+        <div class="field">
+          <label>受講対象 / メモ（任意）</label>
+          <input type="text" id="f-audience" placeholder="例：PEファンドの新任アソシエイト">
+          <div class="hint">この項目は description 末尾に追記されます</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-pane" id="pane-slides">
+      <div class="field">
+        <label>PNG / JPEG画像のアップロード</label>
+        <div class="dropzone" id="dropzone" onclick="document.getElementById('slideFiles').click()">
+          ここに画像をドラッグ&ドロップ、またはクリックして選択<br>
+          <small>複数選択可。1スライド = 1画像</small>
+        </div>
+        <input type="file" id="slideFiles" accept="image/png,image/jpeg" multiple style="display:none" onchange="onSlideFiles(event)">
+        <div class="hint">ファイルは base64 dataURL に変換されてサーバーに保存されます（追加でURLを直接指定したい場合は『JSON貼り付け』タブを使用）</div>
+      </div>
+      <div class="slides-list" id="slidesList"></div>
+    </div>
+
+    <div class="tab-pane" id="pane-quiz">
+      <div class="hint" style="margin-bottom:12px">本システムは <b>クイズ10問</b> を前提に集計しています。問題数は10問固定です。</div>
+      <div id="quizList"></div>
+    </div>
+
+    <div class="tab-pane" id="pane-json">
+      <div class="field">
+        <label>コース定義JSONを貼り付け（schema: 02_course-schema.json）</label>
+        <textarea id="jsonPaste" style="width:100%;min-height:240px;font-family:Consolas,Menlo,monospace;font-size:12px;padding:10px;border:1px solid #d1d5db;border-radius:6px" placeholder='{"title":"...","description":"...","passing_score":7,"slideImages":[...],"quiz":[...]}'></textarea>
+        <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="applyPastedJson()">▶ このJSONをフォームに反映</button>
+        <div class="hint">「フォームに反映」を押すと、基本情報・スライド・クイズの3タブに読み込まれ、確認後に保存できます。</div>
+      </div>
+    </div>
+
+    <footer>
+      <button class="btn btn-ghost" onclick="closeEditor()">キャンセル</button>
+      <div class="right">
+        <button class="btn btn-warning" id="deleteBtn" style="display:none" onclick="deleteCurrent()">🗑 このコースを削除</button>
+        <button class="btn btn-success" onclick="saveCourse()">💾 保存</button>
+      </div>
+    </footer>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+let allCourses = [];
+let editing = null; // { id?, title, description, passing_score, slideImages: [], quiz: [] }
+
+function toast(msg, type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show '+type;
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+async function loadCourses(){
+  try{
+    const res=await fetch(`${API_BASE}/courses`);
+    if(!res.ok)throw new Error('取得失敗');
+    allCourses=await res.json();
+    renderTable();
+  }catch(e){
+    console.error(e);
+    document.getElementById('courseTableWrap').innerHTML='<div class="empty danger">コースの取得に失敗しました</div>';
+  }
+}
+
+function renderTable(){
+  const wrap=document.getElementById('courseTableWrap');
+  if(!allCourses.length){
+    wrap.innerHTML='<div class="empty">コースが登録されていません。「+ 新規コース作成」から追加してください。</div>';
+    return;
+  }
+  let html='<table><thead><tr><th>ID</th><th>タイトル</th><th>説明</th><th>スライド</th><th>問題</th><th>合格点</th><th>更新日</th><th style="text-align:right">操作</th></tr></thead><tbody>';
+  for(const c of allCourses){
+    const slides=(c.slideImages||c.slides||[]).length;
+    const quiz=(c.quiz||[]).length;
+    const updated=c.updated_at?new Date(c.updated_at).toLocaleDateString('ja-JP'):'-';
+    const desc=(c.description||'').slice(0,60)+(c.description&&c.description.length>60?'…':'');
+    html+=`<tr>
+      <td><span class="pill">#${c.id}</span></td>
+      <td><b>${escapeHtml(c.title||'')}</b></td>
+      <td style="color:#6b7280">${escapeHtml(desc)}</td>
+      <td>${slides}枚</td>
+      <td>${quiz}問</td>
+      <td>${c.passing_score??7}</td>
+      <td style="color:#6b7280">${updated}</td>
+      <td style="text-align:right">
+        <button class="btn btn-primary btn-sm" onclick="editCourse(${c.id})">✏ 編集</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCourse(${c.id})">🗑</button>
+      </td>
+    </tr>`;
+  }
+  html+='</tbody></table>';
+  wrap.innerHTML=html;
+}
+
+function escapeHtml(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+// ---------- モーダル ----------
+function openEditor(course){
+  editing = course ? JSON.parse(JSON.stringify(course)) : {title:'',description:'',passing_score:7,slideImages:[],quiz:makeBlankQuiz()};
+  // 既存コース取得時に slides を slideImages に正規化
+  if(editing.slideImages===undefined && editing.slides) editing.slideImages = editing.slides;
+  if(!Array.isArray(editing.slideImages)) editing.slideImages=[];
+  if(!Array.isArray(editing.quiz) || editing.quiz.length===0) editing.quiz = makeBlankQuiz();
+  if(editing.quiz.length < 10){ while(editing.quiz.length<10) editing.quiz.push(blankQ()); }
+  if(editing.quiz.length > 10){ editing.quiz = editing.quiz.slice(0,10); }
+  document.getElementById('modalTitle').textContent = editing.id ? `コース編集 #${editing.id}` : 'コース作成';
+  document.getElementById('deleteBtn').style.display = editing.id ? '' : 'none';
+  document.getElementById('f-title').value = editing.title||'';
+  document.getElementById('f-desc').value = editing.description||'';
+  document.getElementById('f-pass').value = editing.passing_score??7;
+  document.getElementById('f-audience').value = '';
+  renderSlideList();
+  renderQuizList();
+  switchTab('basic');
+  document.getElementById('modalBg').classList.add('open');
+}
+
+function closeEditor(){
+  document.getElementById('modalBg').classList.remove('open');
+  editing=null;
+}
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const names=['basic','slides','quiz','json'];
+    t.classList.toggle('active', names[i]===name);
+  });
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('pane-'+name).classList.add('active');
+}
+
+async function editCourse(id){
+  const full = await (await fetch(`${API_BASE}/courses/${id}`)).json();
+  openEditor(full);
+}
+
+async function deleteCourse(id){
+  if(!confirm(`コース #${id} を削除します。よろしいですか？`)) return;
+  const res=await fetch(`${API_BASE}/courses/${id}`,{method:'DELETE'});
+  if(res.ok){toast('削除しました','success');loadCourses();}
+  else toast('削除に失敗しました','error');
+}
+
+async function deleteCurrent(){
+  if(!editing?.id) return;
+  await deleteCourse(editing.id);
+  closeEditor();
+}
+
+// ---------- スライド ----------
+function renderSlideList(){
+  const wrap=document.getElementById('slidesList');
+  wrap.innerHTML='';
+  editing.slideImages.forEach((s,i)=>{
+    const div=document.createElement('div');
+    div.className='slide-thumb';
+    const src = s.data || s.url || '';
+    div.innerHTML=`
+      <span class="num">${i+1}</span>
+      <img src="${escapeHtml(src)}" alt="">
+      <div class="ctrls">
+        <button title="上へ" onclick="moveSlide(${i},-1)">↑</button>
+        <button title="下へ" onclick="moveSlide(${i},1)">↓</button>
+        <button title="削除" onclick="removeSlide(${i})">✕</button>
+      </div>`;
+    wrap.appendChild(div);
+  });
+}
+
+function moveSlide(i, dir){
+  const j=i+dir;
+  if(j<0||j>=editing.slideImages.length) return;
+  const a=editing.slideImages;
+  [a[i],a[j]]=[a[j],a[i]];
+  renderSlideList();
+}
+
+function removeSlide(i){
+  editing.slideImages.splice(i,1);
+  renderSlideList();
+}
+
+function onSlideFiles(ev){
+  addSlideFiles(ev.target.files);
+  ev.target.value='';
+}
+
+async function addSlideFiles(files){
+  for(const f of files){
+    const dataUrl=await new Promise((res,rej)=>{
+      const r=new FileReader();
+      r.onload=()=>res(r.result);
+      r.onerror=rej;
+      r.readAsDataURL(f);
+    });
+    editing.slideImages.push({data:dataUrl, name:f.name});
+  }
+  renderSlideList();
+}
+
+// dropzone
+const dz=document.getElementById('dropzone');
+['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('dragover');}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('dragover');}));
+dz.addEventListener('drop',async e=>{ if(e.dataTransfer.files?.length){ await addSlideFiles(e.dataTransfer.files); }});
+
+// ---------- クイズ ----------
+function blankQ(){return {question:'',options:['','','',''],correctAnswer:0,explanation:''};}
+function makeBlankQuiz(){const a=[];for(let i=0;i<10;i++)a.push(blankQ());return a;}
+
+function renderQuizList(){
+  const wrap=document.getElementById('quizList');
+  wrap.innerHTML='';
+  editing.quiz.forEach((q,idx)=>{
+    const card=document.createElement('div');
+    card.className='quiz-card';
+    card.innerHTML=`
+      <h4><span>問題 ${idx+1}</span></h4>
+      <div class="field" style="margin-bottom:10px">
+        <textarea data-q="${idx}" data-key="question" rows="2" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;font-size:13px" placeholder="問題文">${escapeHtml(q.question)}</textarea>
+      </div>
+      <div class="opts">
+        ${['A','B','C','D'].map((L,k)=>`
+          <div class="opt-line">
+            <label class="opt-radio"><input type="radio" name="ca-${idx}" value="${k}" ${q.correctAnswer===k?'checked':''} data-q="${idx}" data-key="correctAnswer"> ${L}</label>
+            <input type="text" data-q="${idx}" data-key="opt" data-i="${k}" placeholder="選択肢 ${L}" value="${escapeHtml(q.options[k]||'')}">
+          </div>`).join('')}
+      </div>
+      <div class="field" style="margin-top:10px;margin-bottom:0">
+        <textarea data-q="${idx}" data-key="explanation" rows="2" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-family:inherit;font-size:13px" placeholder="解説（根拠条文・典型ケース）">${escapeHtml(q.explanation)}</textarea>
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+  // bind handlers
+  wrap.querySelectorAll('[data-q]').forEach(el=>{
+    el.addEventListener('input', e=>{
+      const i=+el.dataset.q, key=el.dataset.key;
+      if(key==='question') editing.quiz[i].question=el.value;
+      else if(key==='explanation') editing.quiz[i].explanation=el.value;
+      else if(key==='opt') editing.quiz[i].options[+el.dataset.i]=el.value;
+    });
+    el.addEventListener('change', e=>{
+      if(el.dataset.key==='correctAnswer'){ editing.quiz[+el.dataset.q].correctAnswer = +el.value; }
+    });
+  });
+}
+
+// ---------- JSON 貼り付け ----------
+function applyPastedJson(){
+  try{
+    const j=JSON.parse(document.getElementById('jsonPaste').value);
+    if(!j.title) throw new Error('title がありません');
+    const slides = j.slideImages || j.slides || [];
+    let quiz = Array.isArray(j.quiz)?j.quiz.slice():[];
+    while(quiz.length<10) quiz.push(blankQ());
+    quiz=quiz.slice(0,10).map(q=>({
+      question:String(q.question||''),
+      options:[0,1,2,3].map(i=>String(q.options?.[i]||'')),
+      correctAnswer: Math.max(0,Math.min(3, +q.correctAnswer||0)),
+      explanation:String(q.explanation||'')
+    }));
+    editing = { id:editing?.id, title:j.title, description:j.description||'', passing_score:+j.passing_score||7, slideImages:slides, quiz };
+    document.getElementById('f-title').value=editing.title;
+    document.getElementById('f-desc').value=editing.description;
+    document.getElementById('f-pass').value=editing.passing_score;
+    renderSlideList(); renderQuizList();
+    toast('JSONをフォームに反映しました','success');
+    switchTab('basic');
+  }catch(e){ toast('JSON解析エラー: '+e.message,'error'); }
+}
+
+// ---------- 保存 ----------
+async function saveCourse(){
+  // 値の取り込み
+  editing.title=document.getElementById('f-title').value.trim();
+  editing.description=document.getElementById('f-desc').value.trim();
+  editing.passing_score=Math.max(0,Math.min(10, parseInt(document.getElementById('f-pass').value)||7));
+  const audience=document.getElementById('f-audience').value.trim();
+  if(audience) editing.description = (editing.description?editing.description+' / ':'') + '対象: '+audience;
+
+  // バリデーション
+  if(!editing.title){ toast('タイトルを入力してください','error'); switchTab('basic'); return; }
+  if(editing.slideImages.length<1){ toast('スライド画像を1枚以上追加してください','error'); switchTab('slides'); return; }
+  for(let i=0;i<10;i++){
+    const q=editing.quiz[i];
+    if(!q.question){ toast(`問題 ${i+1} の問題文が未入力です`,'error'); switchTab('quiz'); return; }
+    if(q.options.some(o=>!o)){ toast(`問題 ${i+1} の選択肢が未入力です`,'error'); switchTab('quiz'); return; }
+    if(!q.explanation){ toast(`問題 ${i+1} の解説が未入力です`,'error'); switchTab('quiz'); return; }
+  }
+
+  const body = { title:editing.title, description:editing.description, passing_score:editing.passing_score, slideImages:editing.slideImages, quiz:editing.quiz };
+  const url = editing.id ? `${API_BASE}/courses/${editing.id}` : `${API_BASE}/courses`;
+  const method = editing.id ? 'PUT' : 'POST';
+  try{
+    const res=await fetch(url,{method, headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    if(!res.ok) throw new Error('保存失敗 ('+res.status+')');
+    const j=await res.json();
+    toast(editing.id?'更新しました':'作成しました','success');
+    closeEditor();
+    loadCourses();
+  }catch(e){ toast(e.message,'error'); }
+}
+
+// ---------- JSON インポート ----------
+async function onImportFile(ev){
+  const f=ev.target.files?.[0];
+  ev.target.value='';
+  if(!f) return;
+  try{
+    const text=await f.text();
+    const j=JSON.parse(text);
+    // 単一コースの場合は配列に包む / data.courses 形式にも対応
+    let courses=[];
+    if(Array.isArray(j)) courses=j;
+    else if(j.courses) courses=j.courses;
+    else if(j.title) courses=[j];
+    else throw new Error('対応形式のJSONではありません');
+
+    if(!confirm(`${courses.length} 件のコースを追加します。よろしいですか？`)) return;
+    let ok=0, fail=0;
+    for(const c of courses){
+      try{
+        const body={ title:c.title, description:c.description||'', passing_score:c.passing_score??7, slideImages:c.slideImages||c.slides||[], quiz:c.quiz||[] };
+        const res=await fetch(`${API_BASE}/courses`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        if(res.ok) ok++; else fail++;
+      }catch(_){ fail++; }
+    }
+    toast(`完了: 成功 ${ok} / 失敗 ${fail}`, fail?'error':'success');
+    loadCourses();
+  }catch(e){ toast('インポート失敗: '+e.message,'error'); }
+}
+
+// ---------- 起動 ----------
+loadCourses();
+// #import で起動された場合はインポート用ファイル選択をすぐに開く
+if(window.location.hash==='#import'){
+  setTimeout(()=>document.getElementById('importFile').click(), 300);
+}
+</script>
+</body>
+</html>
+た場合はインポート用ファイル選択をすぐに開く
+if(window.location.hash==='#import'){
+  setTimeout(()=>document.getElementById('importFile').click(), 300);
+}
+</script>
+</body>
+</html>
