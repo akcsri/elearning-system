@@ -204,8 +204,11 @@ function renderTable(){
   }
   let html='<table><thead><tr><th>ID</th><th>タイトル</th><th>説明</th><th>スライド</th><th>問題</th><th>合格点</th><th>更新日</th><th style="text-align:right">操作</th></tr></thead><tbody>';
   for(const c of allCourses){
-    const slides=(c.slideImages||c.slides||[]).length;
-    const quiz=(c.quiz||[]).length;
+    // 一覧APIは軽量化により slideCount/quizCount を返す。フォールバックで配列長も見る。
+    const slides = (typeof c.slideCount === 'number') ? c.slideCount
+                 : (c.slideImages||c.slides||[]).length;
+    const quiz   = (typeof c.quizCount  === 'number') ? c.quizCount
+                 : (c.quiz||[]).length;
     const updated=c.updated_at?new Date(c.updated_at).toLocaleDateString('ja-JP'):'-';
     const desc=(c.description||'').slice(0,60)+(c.description&&c.description.length>60?'…':'');
     html+=`<tr>

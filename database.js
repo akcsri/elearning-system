@@ -149,13 +149,30 @@ async function deleteUser(id) {
     return true;
 }
 
-// 全コース取得
+// 全コース取得（軽量版：slides/quiz本体は返さず件数のみ返す）
+// → /api/data や /api/courses 一覧のレスポンスを大幅に軽量化し、
+//   Fly.io 256MB 機での OOM を回避する。実体は getCourseById で取得。
 async function getCourses() {
-    const result = await pool.query('SELECT * FROM courses ORDER BY id');
-    // slidesをslideImagesにマッピング
+    const result = await pool.query(`
+        SELECT
+            id,
+            title,
+            description,
+            passing_score,
+            created_at,
+            updated_at,
+            jsonb_array_length(COALESCE(slides, '[]'::jsonb)) AS slide_count,
+            jsonb_array_length(COALESCE(quiz,   '[]'::jsonb)) AS quiz_count
+        FROM courses
+        ORDER BY id
+    `);
+    // フロント互換のため slideImages / quiz は空配列で返し、件数を slideCount / quizCount で返す
     return result.rows.map(course => ({
         ...course,
-        slideImages: course.slides || []
+        slideImages: [],
+        quiz: [],
+        slideCount: course.slide_count,
+        quizCount: course.quiz_count,
     }));
 }
 
